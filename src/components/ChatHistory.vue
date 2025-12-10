@@ -47,12 +47,24 @@ const fetchMessages = async () => {
       console.log(`[ChatHistory] Polling: sent ${pollTime}, got ${newMessages.length} messages`)
       
       if (newMessages.length > 0) {
-          // If we have new messages, append them (filtering duplicates if necessary)
-          // For simplicity, assuming backend returns strictly newer messages
+          // If we have new messages, append them
           
           // Initial Load Case (since == 0)
           if (lastMessageTime === 0) {
-               messages.value = [welcomeMessage, ...newMessages]
+               // We want to insert history after Welcome, but keep any optimistic messages we typed while loading
+               const existingOptimistic = messages.value.filter(m => m.id !== 'welcome')
+               
+               // Filter out optimistic messages that might match new server messages (basic dedup by content/sender)
+               // This prevents "flicker" of double messages if the server returns them quickly
+               const filteredOptimistic = existingOptimistic.filter(optimistic => {
+                   const isDuplicate = newMessages.some(serverMsg => 
+                       serverMsg.content === optimistic.content && 
+                       serverMsg.sender === optimistic.sender
+                   )
+                   return !isDuplicate
+               })
+
+               messages.value = [welcomeMessage, ...newMessages, ...filteredOptimistic]
           } else {
                // Append only
                // Dedup based on ID just in case
@@ -64,17 +76,14 @@ const fetchMessages = async () => {
           scrollToBottom()
 
           // Update timestamp from the very last message in the NEW batch
-          // Be careful with sorting. Backend returns reverse?
-          // messages.get.ts: return messages.reverse() -> So they are Oldest -> Newest.
           const lastMsg = newMessages[newMessages.length - 1]
           if (lastMsg && lastMsg.created_at) {
               const ts = new Date(lastMsg.created_at).getTime()
               if (ts > lastMessageTime) lastMessageTime = ts
           }
-      } else if (lastMessageTime === 0) {
-          // Explicitly empty history on first load if returned []
-          messages.value = [welcomeMessage]
-      }
+      } 
+      // Removed the 'else if (lastMessageTime === 0)' block which cleared messages to [welcome]
+
     }
   } catch (err) {
     console.error('Failed to fetch messages:', err)
