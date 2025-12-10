@@ -1,0 +1,177 @@
+<script setup>
+import { ref, onMounted, onUnmounted, watch } from 'vue'
+import WindowFrame from './components/WindowFrame.vue'
+import ChatInterface from './components/ChatInterface.vue'
+import LoginScreen from './components/LoginScreen.vue'
+
+const isLoggedIn = ref(false)
+const username = ref('')
+const isChatEnabled = ref(true)
+const showHistory = ref(true)
+const showSponsored = ref(true)
+const windowTitle = ref('Arts and Entertainment - Red Dragon Inn')
+const eventMode = ref('Live Event')
+const colorTheme = ref('Teal Base')
+let pollInterval
+
+const applyTheme = (theme) => {
+  console.log('Applying theme:', theme)
+  const root = document.documentElement
+  const body = document.body
+  
+  switch (theme) {
+    case 'Graphite':
+      root.style.setProperty('--bg-color', '#404040')
+      root.style.setProperty('--window-bg', '#808080')
+      root.style.setProperty('--text-color', '#ffffff')
+      body.style.backgroundColor = '#404040'
+      break
+    case 'Noir Terminal':
+      root.style.setProperty('--bg-color', '#000000')
+      root.style.setProperty('--window-bg', '#1a1a1a')
+      root.style.setProperty('--text-color', '#00ff00')
+      body.style.backgroundColor = '#000000'
+      break
+    case 'CRT Glow':
+      root.style.setProperty('--bg-color', '#1a001a')
+      root.style.setProperty('--window-bg', '#2b002b')
+      root.style.setProperty('--text-color', '#ff00ff')
+      body.style.backgroundColor = '#1a001a'
+      break
+    default: // Teal Base
+      console.log('Defaulting to Teal Base')
+      root.style.setProperty('--bg-color', '#008080')
+      root.style.setProperty('--window-bg', '#c0c0c0')
+      root.style.setProperty('--text-color', '#000000')
+      body.style.backgroundColor = '#008080'
+  }
+}
+
+const checkAdminAuth = async () => {
+  try {
+    const res = await fetch('http://localhost:3000/api/admin/auth-check', {
+      credentials: 'include' // Important: Send cookies to backend
+    })
+    
+    if (res.ok) {
+      const data = await res.json()
+      if (data.authenticated) {
+        console.log('Admin authenticated via backend session')
+        handleLogin('Admin')
+      }
+    }
+  } catch (err) {
+    console.error('Failed to check admin auth:', err)
+  }
+}
+
+const checkChatStatus = async () => {
+  try {
+    const res = await fetch('http://localhost:3000/api/chat/context')
+    const data = await res.json()
+    // console.log('Chat context:', data) // Reduce noise
+    
+    // Update State
+    isChatEnabled.value = data.is_chat_enabled
+    showHistory.value = data.show_history
+    showSponsored.value = data.show_sponsored !== false // Default true if undefined
+    
+    // Construct Window Title
+    // data.window_title comes from the events table (via chat/context API)
+    if (data.window_title) {
+        // Show both Window Title and Event Name
+        const eName = data.event_name ? `${data.event_name} - ` : ''
+        windowTitle.value = `${eName}${data.window_title}`
+    } else {
+        const appName = "Arts and Entertainment"
+        const eventName = data.event_name ? ` - ${data.event_name}` : ''
+        const mode = data.chat_mode ? ` [${data.chat_mode}]` : ''
+        windowTitle.value = `${appName}${eventName}${mode}`
+    }
+    
+    if (data.chat_mode) eventMode.value = data.chat_mode
+    
+    // Theme handling
+    if (data.color_theme) {
+      if (data.color_theme !== colorTheme.value) {
+        colorTheme.value = data.color_theme
+        applyTheme(data.color_theme)
+      } else {
+         // Re-apply occasionally or just on change? 
+         // For now only on change to avoid heavy DOM hits, but if reload...
+         // Actually applyTheme is cheap enough.
+         // Let's only apply if changed or first load (implied by default ref)
+      }
+    }
+  } catch (err) {
+    console.error('Failed to check chat status:', err)
+  }
+}
+
+const handleLogin = (name) => {
+  username.value = name
+  isLoggedIn.value = true
+}
+
+onMounted(() => {
+  checkAdminAuth()
+  checkChatStatus()
+  pollInterval = setInterval(checkChatStatus, 1000)
+})
+
+onUnmounted(() => {
+  if (pollInterval) clearInterval(pollInterval)
+})
+</script>
+
+<template>
+  <main>
+    <LoginScreen 
+      v-if="!isLoggedIn" 
+      @login="handleLogin" 
+      :is-chat-enabled="isChatEnabled"
+    />
+    <WindowFrame v-else :title="windowTitle" :event-mode="eventMode">
+      <ChatInterface 
+        :username="username" 
+        :is-chat-enabled="isChatEnabled"
+        :show-history="showHistory" 
+        :show-sponsored="showSponsored"
+      />
+    </WindowFrame>
+  </main>
+</template>
+
+<style>
+/* Reset and base styles */
+:root {
+  --bg-color: #008080;
+  --window-bg: #c0c0c0;
+  --text-color: #000000;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-color);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-family: 'Arial', sans-serif;
+  transition: background-color 0.5s ease;
+}
+
+#app {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+main {
+  width: 100%;
+  max-width: 510px; /* 15% smaller than 600px */
+  height: 510px;    /* 15% smaller than 600px */
+  margin-bottom: 10vh; /* Leave space below */
+}
+</style>

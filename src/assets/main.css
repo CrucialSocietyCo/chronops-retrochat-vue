@@ -1,0 +1,39 @@
+/* Global retro styles */
+:root {
+  --retro-gray: #c0c0c0;
+  --retro-dark: #808080;
+  --retro-light: #ffffff;
+  --retro-blue: #000080;
+  --retro-text: #000000;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Arial', sans-serif;
+  -webkit-font-smoothing: none;
+}
+
+/* Scrollbar styling for Webkit */
+::-webkit-scrollbar {
+  width: 16px;
+  background: #dfdfdf;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c0c0c0;
+  border: 1px outset #ffffff;
+  box-shadow: inset 1px 1px #dfdfdf, inset -1px -1px #808080;
+}
+
+::-webkit-scrollbar-button {
+  background: #c0c0c0;
+  width: 16px;
+  height: 16px;
+  border: 1px outset #ffffff;
+  box-shadow: inset 1px 1px #dfdfdf, inset -1px -1px #808080;
+}
