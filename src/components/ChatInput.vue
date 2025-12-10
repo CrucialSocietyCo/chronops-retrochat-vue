@@ -9,6 +9,10 @@ const props = defineProps({
   isChatEnabled: {
     type: Boolean,
     default: true
+  },
+  authToken: {
+    type: String,
+    default: ''
   }
 })
 
@@ -29,10 +33,19 @@ const sendMessage = async () => {
   inputRef.value.innerHTML = ''
   emit('message-sent', content)
 
+
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000'
+
   try {
-    const res = await fetch('http://localhost:3000/api/messages', {
+    const headers = { 'Content-Type': 'application/json' }
+    if (props.authToken) {
+      headers['Authorization'] = `Bearer ${props.authToken}`
+    }
+
+    const res = await fetch(`${API_BASE}/api/messages`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
+      credentials: 'include', // Important: Send auth cookies
       body: JSON.stringify({
         content: content,
         sender: props.username

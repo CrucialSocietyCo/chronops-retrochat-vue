@@ -12,6 +12,7 @@ const showSponsored = ref(true)
 const windowTitle = ref('Arts and Entertainment - Red Dragon Inn')
 const eventMode = ref('Live Event')
 const colorTheme = ref('Teal Base')
+const authToken = ref('')
 let pollInterval
 
 const applyTheme = (theme) => {
@@ -47,9 +48,12 @@ const applyTheme = (theme) => {
   }
 }
 
+
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000'
+
 const checkAdminAuth = async () => {
   try {
-    const res = await fetch('http://localhost:3000/api/admin/auth-check', {
+    const res = await fetch(`${API_BASE}/api/admin/auth-check`, {
       credentials: 'include' // Important: Send cookies to backend
     })
     
@@ -67,7 +71,7 @@ const checkAdminAuth = async () => {
 
 const checkChatStatus = async () => {
   try {
-    const res = await fetch('http://localhost:3000/api/chat/context')
+    const res = await fetch(`${API_BASE}/api/chat/context`)
     const data = await res.json()
     // console.log('Chat context:', data) // Reduce noise
     
@@ -114,6 +118,13 @@ const handleLogin = (name) => {
 }
 
 onMounted(() => {
+    const params = new URLSearchParams(window.location.search)
+    const token = params.get('auth_token')
+    if (token) {
+        authToken.value = token
+        console.log('Captured Auth Token from URL')
+        handleLogin('Admin')
+    }
   checkAdminAuth()
   checkChatStatus()
   pollInterval = setInterval(checkChatStatus, 1000)
@@ -137,6 +148,7 @@ onUnmounted(() => {
         :is-chat-enabled="isChatEnabled"
         :show-history="showHistory" 
         :show-sponsored="showSponsored"
+        :auth-token="authToken"
       />
     </WindowFrame>
   </main>

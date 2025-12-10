@@ -32,6 +32,8 @@ let lastLocalUpdate = 0
 let lastMessageTime = 0 // Track the internal latest timestamp
 const sessionStart = Date.now()
 
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000'
+
 const fetchMessages = async () => {
   // Skip fetching if we updated locally recently
   if (Date.now() - lastLocalUpdate < 2000) return
@@ -39,7 +41,7 @@ const fetchMessages = async () => {
   try {
     // Poll since the last known message time (minus small buffer for safety)
     const pollTime = lastMessageTime > 0 ? lastMessageTime - 100 : 0
-    const res = await fetch(`http://localhost:3000/api/messages?since=${pollTime}`)
+    const res = await fetch(`${API_BASE}/api/messages?since=${pollTime}`)
     if (res.ok) {
       const newMessages = await res.json()
       console.log(`[ChatHistory] Polling: sent ${pollTime}, got ${newMessages.length} messages`)
@@ -57,6 +59,9 @@ const fetchMessages = async () => {
                const newUnique = newMessages.filter(nm => !messages.value.find(m => m.id === nm.id))
                messages.value = [...messages.value, ...newUnique]
           }
+
+          // Trigger Scroll
+          scrollToBottom()
 
           // Update timestamp from the very last message in the NEW batch
           // Be careful with sorting. Backend returns reverse?
@@ -112,15 +117,20 @@ onUnmounted(() => {
   clearInterval(pollInterval)
 })
 
-const addMessage = (text, sender) => {
+const addMessage = (text, sender, isAdmin = false) => {
   lastLocalUpdate = Date.now()
   messages.value.push({
     id: Date.now(), // Temp ID
     content: text, // Changed from 'text' to 'content' to match DB schema if possible, or mapping
     sender,
+    isAdmin,
     type: 'user'
   })
   // Scroll to bottom
+  scrollToBottom()
+}
+
+const scrollToBottom = () => {
   setTimeout(() => {
     const container = document.querySelector('.chat-history')
     if (container) container.scrollTop = container.scrollHeight
@@ -129,15 +139,19 @@ const addMessage = (text, sender) => {
 
 defineExpose({
   fetchMessages,
-  addMessage
+  addMessage,
+  scrollToBottom
 })
 </script>
 
 <template>
   <div class="chat-history">
     <div v-for="msg in messages" :key="msg.id" class="message-line">
-      <span class="sender" :class="{ system: msg.type === 'system' }">{{ msg.sender }}:</span>
-      <span class="content" :class="{ system: msg.type === 'system' }" v-html="msg.content || msg.text"></span>
+      <span class="sender" :class="{ system: msg.type === 'system', admin: msg.isAdmin }">
+        <span v-if="msg.isAdmin" class="admin-star">★ </span>
+        {{ msg.sender }}:
+      </span>
+      <span class="content" :class="{ system: msg.type === 'system', admin: msg.isAdmin }" v-html="msg.content || msg.text"></span>
     </div>
   </div>
 </template>
@@ -171,12 +185,27 @@ defineExpose({
   color: blue;
 }
 
+.sender.admin {
+  color: #ff0000;
+  text-shadow: 0.5px 0 0 #ff0000; /* Faux bold */
+}
+
+.admin-star {
+  color: #ffd700;
+  text-shadow: 1px 1px 0 #000;
+}
+
 .content {
   color: black;
 }
 
 .content.system {
   color: black;
+}
+
+.content.admin {
+  color: #8b0000;
+  font-weight: bold;
 }
 
 .content :deep(img) {

@@ -19,6 +19,10 @@ const props = defineProps({
   showSponsored: {
     type: Boolean,
     default: true
+  },
+  authToken: {
+    type: String,
+    default: ''
   }
 })
 
@@ -26,7 +30,12 @@ const historyRef = ref(null)
 
 const handleMessageSent = (text) => {
   if (historyRef.value) {
-    historyRef.value.addMessage(text, props.username)
+    // If authToken is present, we are admin
+    const isAdmin = !!props.authToken
+    historyRef.value.addMessage(text, props.username, isAdmin)
+    
+    // We expect the backend to have the message available eventually
+    // The historyRef.value.fetchMessages() call will be debounced by ChatHistory's 2s guard anyway
     historyRef.value.fetchMessages()
   }
 }
@@ -38,6 +47,7 @@ const handleMessageSent = (text) => {
     <ChatInput 
       :username="username" 
       :is-chat-enabled="isChatEnabled"
+      :auth-token="authToken"
       @message-sent="handleMessageSent" 
     />
     <div v-if="showSponsored" class="text-ad-container">
