@@ -54,12 +54,12 @@ const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000'
 
     if (!res.ok) {
       const data = await res.json()
-      if (data.error === 'Chat is currently disabled') {
-        alert('Chat is disabled!')
-      }
+      // ALERT THE RAW ERROR FOR DEBUGGING
+      alert(`Message Failed: ${data.statusMessage || data.error || 'Unknown Error'} \n\nDetails: ${JSON.stringify(data.data || {})}`)
     }
   } catch (err) {
     console.error('Failed to send message:', err)
+    alert(`Network/Client Error: ${err.message}`)
   }
 }
 
