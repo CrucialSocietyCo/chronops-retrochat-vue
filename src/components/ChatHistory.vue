@@ -146,12 +146,12 @@ defineExpose({
 
 <template>
   <div class="chat-history">
-    <div v-for="msg in messages" :key="msg.id" class="message-line">
+    <div v-for="msg in messages" :key="msg.id" class="message-line" :class="{ 'admin-line': msg.isAdmin }">
       <span class="sender" :class="{ system: msg.type === 'system', admin: msg.isAdmin }">
         <span v-if="msg.isAdmin" class="admin-star">★ </span>
         {{ msg.sender }}:
       </span>
-      <span class="content" :class="{ system: msg.type === 'system', admin: msg.isAdmin }" v-html="msg.content || msg.text"></span>
+      <span class="content" :class="{ system: msg.type === 'system' }" v-html="msg.content || msg.text"></span>
     </div>
   </div>
 </template>
@@ -171,8 +171,12 @@ defineExpose({
   line-height: 1.4;
 }
 
-.message-line {
-  margin-bottom: 2px;
+.message-line.admin-line {
+  background-color: #fffbdd; /* Subtle yellow highlight */
+  border-top: 1px dotted #e0e0e0;
+  border-bottom: 1px dotted #e0e0e0;
+  margin-top: 2px;
+  padding: 2px 0;
 }
 
 .sender {
@@ -186,13 +190,14 @@ defineExpose({
 }
 
 .sender.admin {
-  color: #ff0000;
-  text-shadow: 0.5px 0 0 #ff0000; /* Faux bold */
+  color: #cc0000; /* Slightly darker red */
+  text-shadow: none;
 }
 
 .admin-star {
-  color: #ffd700;
-  text-shadow: 1px 1px 0 #000;
+  color: #ffaa00;
+  text-shadow: none;
+  font-size: 11px;
 }
 
 .content {
@@ -203,10 +208,6 @@ defineExpose({
   color: black;
 }
 
-.content.admin {
-  color: #8b0000;
-  font-weight: bold;
-}
 
 .content :deep(img) {
   max-width: 24px;
