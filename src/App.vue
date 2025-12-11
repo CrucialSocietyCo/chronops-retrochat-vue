@@ -184,6 +184,16 @@ main {
   width: 100%;
   max-width: 510px; /* 15% smaller than 600px */
   height: 510px;    /* 15% smaller than 600px */
-  margin-bottom: 10vh; /* Leave space below */
+  /* Fallback height for mobile */
+  /* If screen is smaller than 530px height, use almost full height */
+  margin-bottom: 20px;
+}
+
+@media (max-width: 600px) {
+  main {
+    max-width: 95%; /* Add side padding */
+    height: 90vh; /* Use viewport height on mobile to see it all */
+    margin-bottom: 10px;
+  }
 }
 </style>

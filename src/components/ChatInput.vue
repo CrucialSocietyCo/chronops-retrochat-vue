@@ -409,10 +409,14 @@ const insertGif = (url) => {
   flex-grow: 1;
   height: 68px; /* Increased by ~13% from 60px */
   background: #ffffff; /* White background as requested */
-  border: 2px solid #808080;
-  border-right-color: #ffffff;
-  border-bottom-color: #ffffff;
-  box-shadow: inset 1px 1px 0 0 #000;
+  /* Classic Windows 95 "Sunken" Field */
+  border-top: 2px solid #808080;
+  border-left: 2px solid #808080;
+  border-right: 2px solid #ffffff;
+  border-bottom: 2px solid #ffffff;
+  box-shadow: 
+    inset 2px 2px 0 0 #000000,
+    inset -2px -2px 0 0 #c0c0c0;
   padding: 4px;
   font-family: 'Arial', sans-serif;
   font-size: 13px;

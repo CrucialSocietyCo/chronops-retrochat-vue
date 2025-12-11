@@ -55,7 +55,6 @@ const fetchMessages = async () => {
                const existingOptimistic = messages.value.filter(m => m.id !== 'welcome')
                
                // Filter out optimistic messages that might match new server messages (basic dedup by content/sender)
-               // This prevents "flicker" of double messages if the server returns them quickly
                const filteredOptimistic = existingOptimistic.filter(optimistic => {
                    const isDuplicate = newMessages.some(serverMsg => 
                        serverMsg.content === optimistic.content && 
@@ -65,15 +64,40 @@ const fetchMessages = async () => {
                })
 
                messages.value = [welcomeMessage, ...newMessages, ...filteredOptimistic]
+                // Trigger Scroll Forcefully on load
+               scrollToBottom(true)
           } else {
                // Append only
-               // Dedup based on ID just in case
-               const newUnique = newMessages.filter(nm => !messages.value.find(m => m.id === nm.id))
-               messages.value = [...messages.value, ...newUnique]
-          }
+               // Dedup: Filter out BOTH server duplicates (by ID) AND server equivalents of local optimistic messages
+               const reallyNew = []
+               
+               for (const serverMsg of newMessages) {
+                   // 1. Check if we already have this ID (Standard Dedup)
+                   if (messages.value.some(m => m.id === serverMsg.id)) continue
+                   
+                   // 2. Check if this replaces an optimistic message (Pending + Same Content/Sender)
+                   const optimisticIndex = messages.value.findIndex(m => 
+                       m.pending === true &&
+                       m.sender.toLowerCase() === serverMsg.sender.toLowerCase() &&
+                       m.content.trim() === serverMsg.content.trim()
+                   )
 
-          // Trigger Scroll
-          scrollToBottom()
+                   if (optimisticIndex !== -1) {
+                       // FOUND OPTIMISTIC MATCH!
+                       messages.value[optimisticIndex] = serverMsg
+                       // We don't push to reallyNew
+                   } else {
+                       // Truly new message from someone else
+                       reallyNew.push(serverMsg)
+                   }
+               }
+               
+               if (reallyNew.length > 0) {
+                   messages.value = [...messages.value, ...reallyNew]
+                   // Only scroll if we added new items
+                   scrollToBottom()
+               }
+          }
 
           // Update timestamp from the very last message in the NEW batch
           const lastMsg = newMessages[newMessages.length - 1]
@@ -130,19 +154,28 @@ const addMessage = (text, sender, isAdmin = false) => {
   lastLocalUpdate = Date.now()
   messages.value.push({
     id: Date.now(), // Temp ID
-    content: text, // Changed from 'text' to 'content' to match DB schema if possible, or mapping
+    content: text, 
     sender,
     isAdmin,
-    type: 'user'
+    type: 'user',
+    pending: true // Mark as pending for deduplication
   })
   // Scroll to bottom
   scrollToBottom()
 }
 
-const scrollToBottom = () => {
+const scrollToBottom = (force = false) => {
   setTimeout(() => {
     const container = document.querySelector('.chat-history')
-    if (container) container.scrollTop = container.scrollHeight
+    if (!container) return
+    
+    // Check if user is near the bottom (within 100px)
+    // If they are scrolling up (>100px from bottom), DO NOT disturb them.
+    const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100
+    
+    if (force || isNearBottom) {
+        container.scrollTop = container.scrollHeight
+    }
   }, 0)
 }
 
@@ -169,10 +202,14 @@ defineExpose({
 .chat-history {
   flex-grow: 1;
   background: white;
-  border: 2px solid #808080;
-  border-right-color: #ffffff;
-  border-bottom-color: #ffffff;
-  box-shadow: inset 1px 1px 0 0 #000;
+  /* Classic Windows 95 "Sunken" Field */
+  border-top: 2px solid #808080;
+  border-left: 2px solid #808080;
+  border-right: 2px solid #ffffff;
+  border-bottom: 2px solid #ffffff;
+  box-shadow: 
+    inset 2px 2px 0 0 #000000,
+    inset -2px -2px 0 0 #c0c0c0;
   overflow-y: scroll; /* Always show scrollbar */
   padding: 4px;
   font-family: 'Arial', sans-serif;

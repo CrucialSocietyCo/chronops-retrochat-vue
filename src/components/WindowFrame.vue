@@ -35,10 +35,14 @@ defineProps({
 <style scoped>
 .window-frame {
   background: var(--window-bg, #c0c0c0);
-  border: 2px solid #dfdfdf;
-  border-right-color: #404040;
-  border-bottom-color: #404040;
-  box-shadow: 1px 1px 0 0 #000;
+  /* Classic Windows 95 "Pop Out" Border */
+  border-top: 2px solid #ffffff;
+  border-left: 2px solid #ffffff;
+  border-right: 2px solid #000000;
+  border-bottom: 2px solid #000000;
+  box-shadow: 
+    inset 2px 2px 0 0 #dfdfdf,
+    inset -2px -2px 0 0 #808080;
   padding: 2px;
   display: flex;
   flex-direction: column;
