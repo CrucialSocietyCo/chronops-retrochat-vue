@@ -207,14 +207,15 @@ main {
 
 @media (max-width: 600px) {
   main {
-    max-width: 100%; /* Full width */
-    height: 100%;    /* Full Height of the parent (body is 100dvh) */
+    /* Create ~30px spacing around the dialog */
+    max-width: calc(100% - 60px); 
+    max-height: calc(100% - 60px);
+    height: 100%; /* Will be constrained by max-height */
     margin-bottom: 0;
-    /* Optional small padding if desired, but 100% is cleaner "App" look */
   }
   
   #app {
-      height: 100%; /* Ensure container is full height */
+      height: 100%;
       align-items: center; /* Center Vertically */
   }
 }
