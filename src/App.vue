@@ -100,16 +100,29 @@ const checkChatStatus = async () => {
       if (data.color_theme !== colorTheme.value) {
         colorTheme.value = data.color_theme
         applyTheme(data.color_theme)
-      } else {
-         // Re-apply occasionally or just on change? 
-         // For now only on change to avoid heavy DOM hits, but if reload...
-         // Actually applyTheme is cheap enough.
-         // Let's only apply if changed or first load (implied by default ref)
       }
     }
+    
+    // Dynamic Favicon
+    updateFavicon(isChatEnabled.value)
+
   } catch (err) {
     console.error('Failed to check chat status:', err)
   }
+}
+
+const updateFavicon = (enabled) => {
+    const link = document.querySelector("link[rel~='icon']")
+    if (!link) return
+    
+    const activeIcon = '/favicon_chat_active.png'
+    const disabledIcon = '/favicon.ico' // Default until user provides the other one
+    
+    if (enabled) {
+        if (link.href.indexOf(activeIcon) === -1) link.href = activeIcon
+    } else {
+        if (link.href.indexOf(disabledIcon) === -1) link.href = disabledIcon
+    }
 }
 
 const handleLogin = (name) => {
