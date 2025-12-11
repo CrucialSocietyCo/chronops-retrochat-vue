@@ -182,7 +182,10 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
+  /* Fixed viewport for mobile "App" feel */
+  height: 100dvh; 
+  width: 100vw;
+  overflow: hidden; /* Prevent body scroll */
   font-family: 'Arial', sans-serif;
   transition: background-color 0.5s ease;
 }
@@ -204,9 +207,15 @@ main {
 
 @media (max-width: 600px) {
   main {
-    max-width: 95%; /* Add side padding */
-    height: 90vh; /* Use viewport height on mobile to see it all */
-    margin-bottom: 10px;
+    max-width: 100%; /* Full width */
+    height: 100%;    /* Full Height of the parent (body is 100dvh) */
+    margin-bottom: 0;
+    /* Optional small padding if desired, but 100% is cleaner "App" look */
+  }
+  
+  #app {
+      height: 100%; /* Ensure container is full height */
+      align-items: center; /* Center Vertically */
   }
 }
 </style>
