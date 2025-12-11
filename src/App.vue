@@ -116,7 +116,7 @@ const updateFavicon = (enabled) => {
     if (!link) return
     
     const activeIcon = '/favicon_chat_active.png'
-    const disabledIcon = '/favicon.ico' // Default until user provides the other one
+    const disabledIcon = '/favicon_chat_disabled.jpg'
     
     if (enabled) {
         if (link.href.indexOf(activeIcon) === -1) link.href = activeIcon
