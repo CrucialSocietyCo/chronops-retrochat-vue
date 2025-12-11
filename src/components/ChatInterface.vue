@@ -23,6 +23,10 @@ const props = defineProps({
   authToken: {
     type: String,
     default: ''
+  },
+  clientId: {
+    type: String,
+    default: ''
   }
 })
 
@@ -48,6 +52,7 @@ const handleMessageSent = (text) => {
       :username="username" 
       :is-chat-enabled="isChatEnabled"
       :auth-token="authToken"
+      :client-id="clientId"
       @message-sent="handleMessageSent" 
     />
     <div v-if="showSponsored" class="text-ad-container">
