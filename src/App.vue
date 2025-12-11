@@ -125,9 +125,34 @@ const updateFavicon = (enabled) => {
     }
 }
 
+const trackEvent = async (eventType, payload = {}) => {
+  try {
+    await fetch(`${API_BASE}/api/analytics/track`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(authToken.value ? { 'Authorization': `Bearer ${authToken.value}` } : {})
+      },
+      body: JSON.stringify({
+        event_type: eventType,
+        payload: {
+           username: username.value,
+           ...payload
+        }
+      })
+    })
+  } catch (err) {
+    // Fail silently for analytics
+    console.warn('Tracking failed', err)
+  }
+}
+
 const handleLogin = (name) => {
   username.value = name
   isLoggedIn.value = true
+  
+  // Track Room Join
+  trackEvent('room_joined', { source: 'web_client' })
 }
 
 onMounted(() => {
