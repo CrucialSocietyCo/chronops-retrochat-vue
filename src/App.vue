@@ -13,41 +13,22 @@ const windowTitle = ref('Arts and Entertainment - Red Dragon Inn')
 const eventMode = ref('Live Event')
 const colorTheme = ref('Teal Base')
 const authToken = ref('')
+const clientId = ref('')
 let pollInterval
 
-const applyTheme = (theme) => {
-  console.log('Applying theme:', theme)
-  const root = document.documentElement
-  const body = document.body
-  
-  switch (theme) {
-    case 'Graphite':
-      root.style.setProperty('--bg-color', '#404040')
-      root.style.setProperty('--window-bg', '#808080')
-      root.style.setProperty('--text-color', '#ffffff')
-      body.style.backgroundColor = '#404040'
-      break
-    case 'Noir Terminal':
-      root.style.setProperty('--bg-color', '#000000')
-      root.style.setProperty('--window-bg', '#1a1a1a')
-      root.style.setProperty('--text-color', '#00ff00')
-      body.style.backgroundColor = '#000000'
-      break
-    case 'CRT Glow':
-      root.style.setProperty('--bg-color', '#1a001a')
-      root.style.setProperty('--window-bg', '#2b002b')
-      root.style.setProperty('--text-color', '#ff00ff')
-      body.style.backgroundColor = '#1a001a'
-      break
-    default: // Teal Base
-      console.log('Defaulting to Teal Base')
-      root.style.setProperty('--bg-color', '#008080')
-      root.style.setProperty('--window-bg', '#c0c0c0')
-      root.style.setProperty('--text-color', '#000000')
-      body.style.backgroundColor = '#008080'
-  }
+const getOrCreateClientId = () => {
+    let id = localStorage.getItem('chat_client_id')
+    if (!id) {
+        id = crypto.randomUUID ? crypto.randomUUID() : 'client-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9)
+        localStorage.setItem('chat_client_id', id)
+    }
+    clientId.value = id
+    console.log('Client ID:', id)
 }
 
+const applyTheme = (theme) => {
+    // ...
+}
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000'
 
@@ -156,6 +137,7 @@ const handleLogin = (name) => {
 }
 
 onMounted(() => {
+    getOrCreateClientId()
     const params = new URLSearchParams(window.location.search)
     const token = params.get('auth_token')
     if (token) {
@@ -187,6 +169,7 @@ onUnmounted(() => {
         :show-history="showHistory" 
         :show-sponsored="showSponsored"
         :auth-token="authToken"
+        :client-id="clientId"
       />
     </WindowFrame>
   </main>

@@ -13,31 +13,95 @@ const props = defineProps({
   authToken: {
     type: String,
     default: ''
+  },
+  clientId: {
+    type: String,
+    default: ''
   }
 })
 
 const emit = defineEmits(['message-sent'])
 const inputRef = ref(null)
 
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000'
+
+const executeCommand = async (command, args) => {
+  if (!props.authToken) {
+    alert('You must be an admin to use commands.')
+    return
+  }
+
+  const [targetUsername, durationOrReason, ...reasonParts] = args
+  const reason = reasonParts.join(' ') || (durationOrReason && !durationOrReason.match(/^\d+[mh]$/) ? durationOrReason : 'No reason provided')
+
+  let endpoint = ''
+  let body = {}
+
+  if (command === '/mute') {
+    endpoint = '/api/moderation/mute'
+    body = { targetUsername, duration: durationOrReason, reason }
+  } else if (command === '/unmute') {
+    endpoint = '/api/moderation/unmute'
+    body = { targetUsername }
+  } else if (command === '/ban') {
+    endpoint = '/api/moderation/ban'
+    body = { targetUsername, reason: durationOrReason + ' ' + reason }
+  } else {
+    alert('Unknown command')
+    return
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}${endpoint}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${props.authToken}`
+      },
+      body: JSON.stringify(body)
+    })
+    
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.statusMessage || data.message || 'Command failed')
+    
+    alert(`Success: ${data.message}`)
+  } catch (err) {
+    alert(`Command Failed: ${err.message}`)
+  }
+}
+
 const sendMessage = async () => {
   if (!props.isChatEnabled) return
   if (!inputRef.value) return
   
-  // Get content (innerHTML for formatting, innerText for empty check)
+  // Get content (innerHTML for formatting, innerText for command check)
   const content = inputRef.value.innerHTML
-  const textContent = inputRef.value.innerText
+  const textContent = inputRef.value.innerText.trim()
 
-  if (!textContent.trim() && !content.includes('<img')) return // Allow images if we had them, but mostly check text
+  if (!textContent && !content.includes('<img')) return 
+
+  // Check for commands
+  if (textContent.startsWith('/')) {
+    const parts = textContent.split(' ')
+    const command = parts[0]
+    const args = parts.slice(1)
+    
+    if (['/mute', '/unmute', '/ban'].includes(command)) {
+      await executeCommand(command, args)
+      inputRef.value.innerHTML = '' // Clear input
+      return
+    }
+  }
 
   // Optimistic update
   inputRef.value.innerHTML = ''
   emit('message-sent', content)
 
-
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000'
-
   try {
-    const headers = { 'Content-Type': 'application/json' }
+    const headers = { 
+      'Content-Type': 'application/json',
+      'x-client-id': props.clientId 
+    }
     if (props.authToken) {
       headers['Authorization'] = `Bearer ${props.authToken}`
     }
@@ -45,7 +109,7 @@ const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000'
     const res = await fetch(`${API_BASE}/api/messages`, {
       method: 'POST',
       headers,
-      credentials: 'include', // Important: Send auth cookies
+      credentials: 'include', 
       body: JSON.stringify({
         content: content,
         sender: props.username
@@ -54,8 +118,17 @@ const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000'
 
     if (!res.ok) {
       const data = await res.json()
-      // ALERT THE RAW ERROR FOR DEBUGGING
-      alert(`Message Failed: ${data.statusMessage || data.error || 'Unknown Error'} \n\nDetails: ${JSON.stringify(data.data || {})}`)
+      
+      // Handle Moderation Errors Niceley
+      if (data.data && (data.data.code === 'MUTED' || data.data.code === 'RATE_LIMITED' || data.data.code === 'BANNED')) {
+         alert(`⛔ ${data.data.message}\n(${data.data.code})`)
+      } else if (data.data?.code === 'MESSAGE_TOO_LONG') {
+         alert(`⚠️ Message Too Long: ${data.data.message}`)
+      } else if (data.data?.code === 'CONTENT_BLOCKED') {
+         alert(`🚫 Content Blocked: ${data.data.message}`)
+      } else {
+         alert(`Message Failed: ${data.statusMessage || 'Unknown Error'}`)
+      }
     }
   } catch (err) {
     console.error('Failed to send message:', err)
