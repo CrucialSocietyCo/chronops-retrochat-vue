@@ -1,5 +1,6 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import RetroModal from './RetroModal.vue'
 
 const props = defineProps({
   username: {
@@ -23,11 +24,36 @@ const props = defineProps({
 const emit = defineEmits(['message-sent'])
 const inputRef = ref(null)
 
+// Modal State
+const showModal = ref(false)
+const modalTitle = ref('')
+const modalMessage = ref('')
+const modalType = ref('info')
+const modalTimer = ref(0)
+let timerInterval = null
+
+const triggerModal = (title, message, type = 'info', durationSeconds = 0) => {
+    modalTitle.value = title
+    modalMessage.value = message
+    modalType.value = type
+    showModal.value = true
+
+    if (timerInterval) clearInterval(timerInterval)
+    modalTimer.value = durationSeconds
+    
+    if (durationSeconds > 0) {
+        timerInterval = setInterval(() => {
+            modalTimer.value--
+            if (modalTimer.value <= 0) clearInterval(timerInterval)
+        }, 1000)
+    }
+}
+
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000'
 
 const executeCommand = async (command, args) => {
   if (!props.authToken) {
-    alert('You must be an admin to use commands.')
+    triggerModal('Access Denied', 'You must be an admin to use commands.', 'error')
     return
   }
 
@@ -47,7 +73,7 @@ const executeCommand = async (command, args) => {
     endpoint = '/api/moderation/ban'
     body = { targetUsername, reason: durationOrReason + ' ' + reason }
   } else {
-    alert('Unknown command')
+    triggerModal('Error', 'Unknown command', 'error')
     return
   }
 
@@ -64,9 +90,9 @@ const executeCommand = async (command, args) => {
     const data = await res.json()
     if (!res.ok) throw new Error(data.statusMessage || data.message || 'Command failed')
     
-    alert(`Success: ${data.message}`)
+    triggerModal('Success', data.message, 'info')
   } catch (err) {
-    alert(`Command Failed: ${err.message}`)
+    triggerModal('Command Failed', err.message, 'error')
   }
 }
 
@@ -120,19 +146,28 @@ const sendMessage = async () => {
       const data = await res.json()
       
       // Handle Moderation Errors Niceley
-      if (data.data && (data.data.code === 'MUTED' || data.data.code === 'RATE_LIMITED' || data.data.code === 'BANNED')) {
-         alert(`⛔ ${data.data.message}\n(${data.data.code})`)
+      if (data.data?.code === 'RATE_LIMITED') {
+          // Calculate remaining time
+          const expires = new Date(data.data.expires_at)
+          const now = new Date()
+          const diffSeconds = Math.ceil((expires - now) / 1000)
+          
+          triggerModal('System Alert', data.data.message, 'error', diffSeconds > 0 ? diffSeconds : 0)
+      } else if (data.data?.code === 'BANNED') {
+           triggerModal('BANNED', data.data.message, 'error')
+      } else if (data.data?.code === 'MUTED') {
+           triggerModal('Muted', data.data.message, 'warning')
       } else if (data.data?.code === 'MESSAGE_TOO_LONG') {
-         alert(`⚠️ Message Too Long: ${data.data.message}`)
+         triggerModal('Message Rejected', data.data.message, 'warning')
       } else if (data.data?.code === 'CONTENT_BLOCKED') {
-         alert(`🚫 Content Blocked: ${data.data.message}`)
+         triggerModal('Content Filter', data.data.message, 'warning')
       } else {
-         alert(`Message Failed: ${data.statusMessage || 'Unknown Error'}`)
+         triggerModal('Error', data.statusMessage || 'Unknown Error', 'error')
       }
     }
   } catch (err) {
     console.error('Failed to send message:', err)
-    alert(`Network/Client Error: ${err.message}`)
+    triggerModal('Network Error', err.message, 'error')
   }
 }
 
@@ -235,6 +270,13 @@ const insertGif = (url) => {
 
 <template>
   <div class="chat-input-area">
+    <RetroModal 
+      v-model="showModal" 
+      :title="modalTitle" 
+      :message="modalMessage" 
+      :type="modalType"
+      :timer="modalTimer"
+    />
     <div class="toolbar">
       <select class="font-select" @change="changeFont" :disabled="!isChatEnabled">
         <option value="Arial">Arial</option>
