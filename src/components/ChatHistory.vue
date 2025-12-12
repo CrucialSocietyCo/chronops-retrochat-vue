@@ -237,8 +237,11 @@ import { supabase } from '../lib/supabase'
 import ReactionPills from './ReactionPills.vue'
 import ReactionPalette from './ReactionPalette.vue'
 
-// Determine if mobile (simple check)
-const isMobile = window.matchMedia("(max-width: 768px)").matches
+const isMobile = ref(false)
+
+onMounted(() => {
+    isMobile.value = window.matchMedia("(max-width: 768px)").matches
+})
 
 const activePalette = ref(null)
 const hoveredMessageId = ref(null)
@@ -350,7 +353,7 @@ onMounted(() => {
 
         <!-- Hover Add Button (Inline) -->
         <button 
-            v-if="hoveredMessageId === msg.id && msg.type !== 'system'" 
+            v-if="(hoveredMessageId === msg.id || isMobile) && msg.type !== 'system'" 
             class="add-reaction-btn"
             @click.stop="openPalette($event, msg.id)"
             title="React"
