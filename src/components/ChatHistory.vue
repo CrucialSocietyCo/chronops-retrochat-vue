@@ -316,10 +316,10 @@ defineExpose({
 
 .jump-btn {
   position: absolute;
-  bottom: 30px; /* Increased margin from bottom */
+  bottom: 15px; /* Increased margin from bottom */
   right: 30px; /* Increased margin from right */
-  width: 26px; /* Smaller size (less "padding") */
-  height: 26px;
+  width: 25px; /* Smaller size (less "padding") */
+  height: 25px;
   background: #c0c0c0;
   border-top: 2px solid #ffffff;
   border-left: 2px solid #ffffff;
@@ -330,7 +330,7 @@ defineExpose({
   align-items: center;
   justify-content: center;
   font-family: 'Press Start 2P', monospace, sans-serif;
-  font-size: 8px; /* Smaller font for smaller button */
+  font-size: 11px; /* Smaller font for smaller button */
   cursor: pointer;
   z-index: 100;
   color: #000;

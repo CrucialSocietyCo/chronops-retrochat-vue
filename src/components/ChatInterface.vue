@@ -1,7 +1,10 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import ChatHistory from './ChatHistory.vue'
 import ChatInput from './ChatInput.vue'
+import JoinBannerRow from './JoinBannerRow.vue'
+import { useJoinBanner } from '../composables/useJoinBanner.js'
+import { createClient } from '@supabase/supabase-js'
 
 const props = defineProps({
   username: {
@@ -31,6 +34,49 @@ const props = defineProps({
 })
 
 const historyRef = ref(null)
+const { joinBanner, handleUserJoined } = useJoinBanner()
+
+// Realtime Setup
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseKey = import.meta.env.VITE_SUPABASE_KEY
+let supabase = null
+let channel = null
+
+onMounted(async () => {
+  if (supabaseUrl && supabaseKey) {
+    supabase = createClient(supabaseUrl, supabaseKey)
+    
+    // Subscribe to room
+    channel = supabase.channel('room:general')
+    
+    channel
+      .on('broadcast', { event: 'user_joined' }, (payload) => {
+        handleUserJoined(payload.payload)
+      })
+      .subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+           // Emit my join event
+           await channel.send({
+             type: 'broadcast',
+             event: 'user_joined',
+             payload: {
+               user_id: props.clientId, // Use clientId as anonymous user_id
+               username: props.username,
+               joined_at: new Date().toISOString()
+             }
+           })
+        }
+      })
+  } else {
+    console.warn('Supabase URL/Key missing. Join Banner disabled.')
+  }
+})
+
+onUnmounted(() => {
+  if (channel) {
+    supabase.removeChannel(channel)
+  }
+})
 
 const handleMessageSent = (text) => {
   if (historyRef.value) {
@@ -48,6 +94,7 @@ const handleMessageSent = (text) => {
 <template>
   <div class="chat-interface">
     <ChatHistory ref="historyRef" :show-history="showHistory" />
+    <JoinBannerRow :banner="joinBanner" />
     <ChatInput 
       :username="username" 
       :is-chat-enabled="isChatEnabled"
