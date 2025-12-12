@@ -261,7 +261,7 @@ const openPalette = (event, messageId) => {
         messageId,
         position: {
             top: rect.top - 8, // Align vertically center-ish
-            left: rect.left - 175 // Shift left by approx width (6 emojis * ~28px) to appear "sliding out"
+            left: rect.left - 160 // Shift left (approx 135px width + 25px gap)
         }
     }
 }
