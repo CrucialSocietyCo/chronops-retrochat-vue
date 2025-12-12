@@ -461,12 +461,6 @@ onMounted(() => {
     margin-right: 2px;
 }
 
-/* Use Smiley Face */
-.add-reaction-btn::before {
-    content: '☺'; 
-    margin-right: -2px; /* Pull + closer to ☺ */
-}
-
 @media (hover: hover) {
     .add-reaction-btn:hover {
         color: #444; /* Darker than #999 */
