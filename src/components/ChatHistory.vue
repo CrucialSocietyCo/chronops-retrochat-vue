@@ -413,17 +413,19 @@ onMounted(() => {
 
 .add-reaction-btn {
     display: inline-block;
-    vertical-align: middle;
+    vertical-align: baseline; /* Aligns with text baseline */
     margin-left: 8px;
     background: transparent;
     border: none;
     color: #999;
     cursor: pointer;
-    font-size: 14px; /* Balanced size */
+    font-size: 14px;
     line-height: 1;
-    padding: 0 4px;
-    opacity: 0.5; /* Subtle by default */
-    /* Removed Times New Roman to match UI */
+    padding: 2px 4px; /* Balanced padding */
+    border-radius: 4px; /* Soften edges */
+    opacity: 0.5;
+    position: relative;
+    top: 2px; /* Visual tweak for Smiley baseline */
 }
 
 /* Use Smiley Face */
@@ -432,10 +434,9 @@ onMounted(() => {
 }
 
 .add-reaction-btn:hover {
-    color: #000080; /* Classic Navy Blue */
+    color: #000080;
     opacity: 1;
-    background: #e0e0e0; /* Subtle highlight box */
-    /* Removed scale and text-shadow */
+    background: #e0e0e0;
 }
 
 .add-reaction-btn::after {
