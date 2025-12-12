@@ -31,6 +31,7 @@ let pollInterval
 let lastLocalUpdate = 0
 let lastMessageTime = 0 // Track the internal latest timestamp
 const sessionStart = Date.now()
+const historyRef = ref(null)
 const isAtBottom = ref(true)
 const hasUnreadMessages = ref(false)
 
@@ -186,7 +187,7 @@ const addMessage = (text, sender, isAdmin = false) => {
 
 const scrollToBottom = (force = false) => {
   setTimeout(() => {
-    const container = document.querySelector('.chat-history')
+    const container = historyRef.value
     if (!container) return
     
     // Check if user is near the bottom (within 100px)
@@ -194,7 +195,10 @@ const scrollToBottom = (force = false) => {
     const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100
     
     if (force || isNearBottom) {
-        container.scrollTop = container.scrollHeight
+        container.scrollTo({
+            top: container.scrollHeight,
+            behavior: 'smooth'
+        })
     }
   }, 0)
 }
@@ -207,31 +211,42 @@ defineExpose({
 </script>
 
 <template>
-  <div class="chat-history" @scroll="handleScroll">
-    <div v-for="msg in messages" :key="msg.id" class="message-line" :class="{ 'admin-line': msg.isAdmin }">
-      <span class="sender" :class="{ system: msg.type === 'system', admin: msg.isAdmin }">
-        <span v-if="msg.isAdmin" class="admin-star">★ </span>
-        {{ msg.sender }}:
-      </span>
-      <span class="content" :class="{ system: msg.type === 'system' }" v-html="msg.content || msg.text"></span>
+  <div class="history-wrapper">
+    <div ref="historyRef" class="chat-history" @scroll="handleScroll">
+      <div v-for="msg in messages" :key="msg.id" class="message-line" :class="{ 'admin-line': msg.isAdmin }">
+        <span class="sender" :class="{ system: msg.type === 'system', admin: msg.isAdmin }">
+          <span v-if="msg.isAdmin" class="admin-star">★ </span>
+          {{ msg.sender }}:
+        </span>
+        <span class="content" :class="{ system: msg.type === 'system' }" v-html="msg.content || msg.text"></span>
+      </div>
     </div>
     
-    <button 
-        v-if="!isAtBottom" 
-        class="jump-btn" 
-        :class="{ 'has-new': hasUnreadMessages }"
-        @click="scrollToBottom(true)"
-        :title="hasUnreadMessages ? 'New Messages' : 'Scroll to Bottom'"
-    >
-        <span v-if="hasUnreadMessages">New!</span>
-        <span v-else>▼</span>
-    </button>
+    <Transition name="pop-up">
+        <button 
+            v-if="!isAtBottom" 
+            class="jump-btn" 
+            :class="{ 'has-new': hasUnreadMessages }"
+            @click="scrollToBottom(true)"
+            :title="hasUnreadMessages ? 'New Messages' : 'Scroll to Bottom'"
+        >
+            <span v-if="hasUnreadMessages">New!</span>
+            <span v-else>▼</span>
+        </button>
+    </Transition>
   </div>
 </template>
 
 <style scoped>
-.chat-history {
+.history-wrapper {
   position: relative;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.chat-history {
   flex-grow: 1;
   background: white;
   /* Classic Windows 95 "Sunken" Field */
@@ -301,28 +316,63 @@ defineExpose({
 
 .jump-btn {
   position: absolute;
-  bottom: 10px;
-  right: 20px;
+  bottom: 30px; /* Increased margin from bottom */
+  right: 30px; /* Increased margin from right */
+  width: 26px; /* Smaller size (less "padding") */
+  height: 26px;
   background: #c0c0c0;
-  border: 2px outset #ffffff;
-  box-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-  padding: 0;
-  width: 32px;
-  height: 32px;
+  border-top: 2px solid #ffffff;
+  border-left: 2px solid #ffffff;
+  border-right: 2px solid #000000;
+  border-bottom: 2px solid #000000;
+  box-shadow: 1px 1px 0px 0px #000;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Arial', sans-serif;
-  font-weight: bold;
-  font-size: 16px;
+  font-family: 'Press Start 2P', monospace, sans-serif;
+  font-size: 8px; /* Smaller font for smaller button */
   cursor: pointer;
   z-index: 100;
   color: #000;
-  opacity: 1;
+  image-rendering: pixelated;
+}
+
+.jump-btn:active {
+  background: #c0c0c0;
+  border-top: 2px solid #000000;
+  border-left: 2px solid #000000;
+  border-right: 2px solid #ffffff;
+  border-bottom: 2px solid #ffffff;
+  transform: translate(1px, 1px);
+  box-shadow: none;
 }
 
 .jump-btn:hover {
-  background: #d0d0d0;
+  background: #e0e0e0;
+}
+
+.jump-btn.has-new {
+  background: #ffff00; /* Hot Yellow */
+  color: red;
+  border-color: #000;
+  /* Hard blinking effect */
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+  50% { background: #ff0000; color: #ffff00; }
+}
+
+/* Transition Styles */
+.pop-up-enter-active,
+.pop-up-leave-active {
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.pop-up-enter-from,
+.pop-up-leave-to {
+  opacity: 0;
+  transform: scale(0.5) translateY(20px);
 }
 
 .jump-btn.has-new {
