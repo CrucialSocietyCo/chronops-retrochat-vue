@@ -53,28 +53,72 @@ const triggerModal = (title, message, type = 'info', durationSeconds = 0) => {
 const moderationLock = ref(false)
 const lockExpiry = ref(null)
 const moderationReason = ref('')
+const lockRemainingSeconds = ref(0)
 let lockTimer = null
 
+const LOCK_STORAGE_KEY = 'chat_moderation_lock'
+import { onMounted } from 'vue'
+
 const startLockCountdown = (expiresAt) => {
+    const expiresDate = new Date(expiresAt)
     moderationLock.value = true
-    lockExpiry.value = new Date(expiresAt)
+    lockExpiry.value = expiresDate
+    
+    // Save to Checkpoint
+    localStorage.setItem(LOCK_STORAGE_KEY, JSON.stringify({
+        expiresAt: expiresAt,
+        reason: moderationReason.value || 'Temporarily disabled'
+    }))
+    
+    // Initial calc
+    const now = new Date()
+    lockRemainingSeconds.value = Math.max(0, Math.ceil((expiresDate - now) / 1000))
     
     if (lockTimer) clearInterval(lockTimer)
     
     lockTimer = setInterval(() => {
         const now = new Date()
+        const diff = Math.ceil((lockExpiry.value - now) / 1000)
+        lockRemainingSeconds.value = Math.max(0, diff)
+
         if (now >= lockExpiry.value) {
             moderationLock.value = false
             moderationReason.value = ''
+            lockRemainingSeconds.value = 0
+            localStorage.removeItem(LOCK_STORAGE_KEY)
             clearInterval(lockTimer)
             lockTimer = null
         }
     }, 1000)
 }
 
+onMounted(() => {
+    const savedLock = localStorage.getItem(LOCK_STORAGE_KEY)
+    if (savedLock) {
+        try {
+            const { expiresAt, reason } = JSON.parse(savedLock)
+            const expiry = new Date(expiresAt)
+            if (expiry > new Date()) {
+                moderationReason.value = reason
+                startLockCountdown(expiry)
+            } else {
+                localStorage.removeItem(LOCK_STORAGE_KEY)
+            }
+        } catch (e) {
+            console.error('Failed to parse saved lock', e)
+        }
+    }
+})
+
 const isInputActive = computed(() => props.isChatEnabled && !moderationLock.value)
 const placeholderText = computed(() => {
-    if (moderationLock.value) return `Muted: ${moderationReason.value || 'Temporarily disabled'}`
+    if (moderationLock.value) {
+        let text = `Muted: ${moderationReason.value || 'Temporarily disabled'}`
+        if (lockRemainingSeconds.value > 0) {
+            text += ` (${lockRemainingSeconds.value}s)`
+        }
+        return text
+    }
     return ''
 })
 
