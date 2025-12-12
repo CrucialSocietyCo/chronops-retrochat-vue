@@ -250,6 +250,7 @@ main {
     flex-direction: column;
     height: 100%;
     justify-content: center; /* Centers main vertically if height allows */
+    align-items: center; /* Fix: Centers contents (chatroom) horizontally on mobile */
 }
 
 /* Ensure main doesn't double margin if container handles it */

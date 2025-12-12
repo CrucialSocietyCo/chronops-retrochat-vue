@@ -111,6 +111,7 @@ const handleMessageSent = (text) => {
       :is-chat-enabled="isChatEnabled"
       :auth-token="authToken"
       :client-id="clientId"
+      :is-admin="!!authToken"
       @message-sent="handleMessageSent" 
       @typing="startTyping"
     />

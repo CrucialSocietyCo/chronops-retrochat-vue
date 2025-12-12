@@ -19,14 +19,10 @@ const getRandomWelcome = () => {
   return welcomeMessages[index]
 }
 
-const welcomeMessage = {
-  id: 'welcome',
-  sender: 'OnlineHost',
-  content: getRandomWelcome(),
-  type: 'system'
-}
+const welcomeContent = getRandomWelcome()
+const showWelcome = ref(true)
 
-const messages = ref([welcomeMessage])
+const messages = ref([]) // Start empty, welcome is separate
 let pollInterval
 let lastLocalUpdate = 0
 let lastMessageTime = 0 // Track the internal latest timestamp
@@ -68,6 +64,16 @@ const fetchMessages = async () => {
     if (res.ok) {
       const newMessages = await res.json()
       console.log(`[ChatHistory] Polling: sent ${pollTime}, got ${newMessages.length} messages`)
+      if (newMessages.length > 0) {
+          console.group('[ChatHistory] New Messages Debug')
+          newMessages.forEach(m => {
+              console.log(`ID: ${m.id}, Type: ${m.type}, Subtype: ${m.payload?.subtype}`)
+              if (m.payload?.subtype === 'voice_drop') {
+                  console.log('🎤 VOICE DROP DETECTED in fetch:', m)
+              }
+          })
+          console.groupEnd()
+      }
       
       if (newMessages.length > 0) {
           // Process Reactions for ALL fetched messages (Initial or New)
@@ -82,8 +88,8 @@ const fetchMessages = async () => {
           
           // Initial Load Case (since == 0)
           if (lastMessageTime === 0) {
-               // We want to insert history after Welcome, but keep any optimistic messages we typed while loading
-               const existingOptimistic = messages.value.filter(m => m.id !== 'welcome')
+               // We want to insert history but EXCLUDE the welcome message which is now sticky
+               const existingOptimistic = messages.value.filter(m => m.id !== 'welcome') // Cleanup old if any
                
                // Filter out optimistic messages that might match new server messages (basic dedup by content/sender)
                const filteredOptimistic = existingOptimistic.filter(optimistic => {
@@ -94,7 +100,7 @@ const fetchMessages = async () => {
                    return !isDuplicate
                })
 
-               messages.value = [welcomeMessage, ...newMessages, ...filteredOptimistic]
+               messages.value = [...newMessages, ...filteredOptimistic]
                 // Trigger Scroll Forcefully on load
                scrollToBottom(true)
           } else {
@@ -172,8 +178,9 @@ import { watch } from 'vue' // Ensure watch is imported
 watch(() => props.showHistory, (newVal, oldVal) => {
     console.log(`[ChatHistory] Show History changed: ${oldVal} -> ${newVal}`)
     if (newVal === false) {
-        // History hidden: Clear messages (keep welcome?)
-        messages.value = [welcomeMessage]
+        // History hidden: Clear messages
+        messages.value = []
+        // Optional: Re-show welcome? Maybe not if it already expired.
         // We do NOT reset lastMessageTime because we still want to receive NEW realtime messages?
         // Actually, if history is hidden, we might still want to see *future* messages.
         // But if we hide history, the *visible* list should be cleared.
@@ -187,6 +194,11 @@ watch(() => props.showHistory, (newVal, oldVal) => {
 onMounted(() => {
   fetchMessages()
   pollInterval = setInterval(fetchMessages, 1000)
+  
+  // Sticky Welcome Timer
+  setTimeout(() => {
+      showWelcome.value = false
+  }, 12000)
 })
 
 onUnmounted(() => {
@@ -236,6 +248,7 @@ import { reactive, computed } from 'vue'
 import { supabase } from '../lib/supabase'
 import ReactionPills from './ReactionPills.vue'
 import ReactionPalette from './ReactionPalette.vue'
+import VoiceDropMessage from './VoiceDropMessage.vue'
 
 const isMobile = ref(false)
 
@@ -330,6 +343,15 @@ onMounted(() => {
 <template>
   <div class="history-wrapper">
     <div ref="historyRef" class="chat-history" @scroll="handleScroll">
+      
+      <!-- Sticky Welcome -->
+      <Transition name="fade-slide">
+        <div v-if="showWelcome" class="message-line system-line sticky-welcome">
+             <span class="sender system">OnlineHost:</span>
+             <span class="content system">*** {{ welcomeContent }} ***</span>
+        </div>
+      </Transition>
+
       <div 
         v-for="msg in messages" 
         :key="msg.id" 
@@ -342,7 +364,24 @@ onMounted(() => {
           <span v-if="msg.isAdmin" class="admin-star">{{ badgeIcon }} </span>
           {{ msg.sender }}:
         </span>
-        <span class="content" :class="{ system: msg.type === 'system' }" v-html="msg.content || msg.text"></span>
+        
+        <!-- Voice Drop (Supreme Spec) -->
+        <VoiceDropMessage 
+          v-if="msg.payload?.subtype === 'voice_drop' || msg.payload?.subtype === 'audio_drop'" 
+          :audio-url="msg.payload.audioUrl || msg.payload.url" 
+          :duration-ms="Number(msg.payload.durationMs || (msg.payload.duration * 1000) || 0)" 
+          :admin-name="msg.payload.adminName || msg.sender"
+          :created-at="msg.created_at"
+          :is-live-recent="true" 
+        />
+        
+        <!-- Standard Content -->
+        <span 
+          v-else
+          class="content" 
+          :class="{ system: msg.type === 'system' }" 
+          v-html="msg.content || msg.text"
+        ></span>
         
         <!-- Inline Reactions -->
         <ReactionPills 
@@ -599,6 +638,38 @@ onMounted(() => {
 .pop-up-leave-to {
   opacity: 0;
   transform: scale(0.5) translateY(20px);
+}
+
+.sticky-welcome {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-top: 0;
+}
+
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: all 0.8s ease-in-out;
+  max-height: 100px; /* Arbitrary height larger than content */
+  opacity: 1;
+  overflow: hidden;
+}
+
+.fade-slide-enter-from,
+.fade-slide-leave-to {
+  max-height: 0;
+  opacity: 0;
+  margin-top: 0;
+  margin-bottom: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  transform: translateY(-10px);
+}
+
+/* Ensure inner content animates gracefully */
+.sticky-welcome {
+    /* Maintain other styles */
 }
 
 .jump-btn.has-new {

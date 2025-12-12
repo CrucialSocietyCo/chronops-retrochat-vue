@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import RetroModal from './RetroModal.vue'
+import RecordVoiceDropButton from './RecordVoiceDropButton.vue'
 
 const props = defineProps({
   username: {
@@ -18,6 +19,10 @@ const props = defineProps({
   clientId: {
     type: String,
     default: ''
+  },
+  isAdmin: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -178,8 +183,7 @@ const sendMessage = async () => {
   const textContent = inputRef.value.innerText.trim()
 
   if (!textContent && !content.includes('<img')) return 
-
-  // Check for commands
+  
   if (textContent.startsWith('/')) {
     const parts = textContent.split(' ')
     const command = parts[0]
@@ -427,7 +431,7 @@ const handleInput = () => {
       :message="modalMessage" 
       :type="modalType"
       :timer="modalTimer"
-    />
+    ></RetroModal>
     <div class="toolbar">
       <select class="font-select" @change="changeFont" :disabled="!isChatEnabled">
         <option value="Arial">Arial</option>
@@ -448,7 +452,7 @@ const handleInput = () => {
               @keydown.enter.prevent="searchGifs"
               placeholder="Search GIFs..." 
               class="gif-search"
-            />
+            >
             <div class="gif-results">
               <img 
                 v-for="(gif, index) in gifResults" 
@@ -456,7 +460,7 @@ const handleInput = () => {
                 :src="gif.media[0].tinygif.url" 
                 @click="insertGif(gif.media[0].tinygif.url)"
                 class="gif-option"
-              />
+              >
               <button 
                   v-if="gifNextCursor && !isLoadingGifs" 
                   @click.stop="searchGifs(true)" 
@@ -470,7 +474,7 @@ const handleInput = () => {
         </div>
         <div class="emoticon-wrapper">
           <button ref="emoticonButtonRef" @click="toggleEmoticons" class="icon-btn" :disabled="!isChatEnabled">
-            <img src="/emoticon_button.png" alt="Emoticons" />
+            <img src="/emoticon_button.png" alt="Emoticons">
           </button>
           <div v-if="showEmoticons" ref="emoticonPickerRef" class="emoticon-picker">
             <!-- Categories -->
@@ -483,12 +487,21 @@ const handleInput = () => {
                       :src="url" 
                       @click="insertEmoticon(url)"
                       class="emoticon-option"
-                    />
+                    >
                 </div>
             </div>
           </div>
         </div>
       </div>
+      
+      <!-- Record Voice Drop Button (Admin Only) -->
+      <RecordVoiceDropButton 
+        v-if="isAdmin" 
+        :is-admin="isAdmin" 
+        :auth-token="authToken"
+        :disabled="!isChatEnabled" 
+      ></RecordVoiceDropButton>
+
       <button class="send-btn" @click="sendMessage" :disabled="!isInputActive">Send</button>
     </div>
     <div 
