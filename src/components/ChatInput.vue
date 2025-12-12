@@ -699,4 +699,16 @@ const handleInput = () => {
   max-width: 36px;
   max-height: 26px;
 }
+
+@media (max-width: 768px) {
+  .emoticon-picker, .gif-picker {
+    position: fixed;
+    bottom: 80px; /* Above toolbar */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90vw;
+    max-width: 340px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+  }
+}
 </style>
