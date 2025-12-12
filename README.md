@@ -1,113 +1,89 @@
-# ChronOps RetroChat Vue
+<div align="center" style="font-family: monospace; background-color: #0f1115; color: #e5e7eb; padding: 40px; border-radius: 8px; border: 1px solid #1f2937; margin-bottom: 20px;">
+  <h1 style="color: #38bdf8; letter-spacing: 2px; text-transform: uppercase; margin: 0; font-size: 24px;">
+    CHRONOPS <span style="color: #a78bfa;">//</span> RETROCHAT
+  </h1>
+  <p style="color: #9ca3af; font-size: 14px; margin-top: 10px; margin-bottom: 20px;">
+    Vue 3 Realtime Surface. No Auth. Pure Signal.
+  </p>
+  <div style="height: 1px; width: 100px; background-color: #38bdf8; margin: 0 auto;"></div>
+</div>
 
-`chronops-retrochat-vue` is a lightweight Vue 3 frontend delivering a single-room, retro-style realtime chat experience. It is designed for immediacy, presence, and simplified system feedback. This project represents the "pure chat surface" of the ChronOps ecosystem and intentionally excludes complex admin dashboards or CMS features.
+<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; color: #e5e7eb; line-height: 1.6;">
 
-![Retro Chat Screenshot](docs/screenshot.png)
+<!-- SECTION 1: WHAT AP -->
+<h3 style="border-left: 3px solid #38bdf8; padding-left: 10px; color: #38bdf8; margin-top: 30px;">
+  SYSTEM IDENTITY
+</h3>
+<p style="color: #d1d5db; font-size: 15px;">
+  <b>chronops-retrochat-vue</b> is the specialized frontend for the ChronOps ecosystem. It delivers a single-room, realtime chat experience with a deliberate retro aesthetic. It connects directly to Supabase with zero authentication logic—users are ephemeral ghosts in the machine.
+</p>
 
-## Quickstart
+<!-- SECTION 2: RUN SEQUENCE -->
+<h3 style="border-left: 3px solid #a78bfa; padding-left: 10px; color: #a78bfa; margin-top: 40px;">
+  INIT SEQUENCE
+</h3>
 
-### Using npm
-
-```bash
-# Install dependencies
+<div style="background-color: #111827; border: 1px solid #374151; border-radius: 6px; padding: 20px;">
+  
+  <p style="margin-top: 0; font-family: monospace; color: #38bdf8; font-size: 12px; text-transform: uppercase;">
+    OPTION A :: NPM
+  </p>
+  <pre style="background: #0f1115; border: 1px solid #1f2937; border-radius: 4px; padding: 12px; color: #e5e7eb; font-family: monospace; font-size: 13px;">
 npm install
-
-# Setup environment variables
 cp .env.example .env.local
+npm run dev</pre>
 
-# Run development server
-npm run dev
-```
-
-### Using pnpm
-
-```bash
-# Install dependencies
+  <p style="margin-top: 20px; font-family: monospace; color: #a78bfa; font-size: 12px; text-transform: uppercase;">
+    OPTION B :: PNPM
+  </p>
+  <pre style="background: #0f1115; border: 1px solid #1f2937; border-radius: 4px; padding: 12px; color: #e5e7eb; font-family: monospace; font-size: 13px;">
 pnpm install
-
-# Setup environment variables
 cp .env.example .env.local
+pnpm dev</pre>
 
-# Run development server
-pnpm dev
-```
+</div>
 
-## Environment Variables
+<!-- SECTION 3: ENV -->
+<h3 style="border-left: 3px solid #38bdf8; padding-left: 10px; color: #38bdf8; margin-top: 40px;">
+  ENVIRONMENT
+</h3>
+<div style="background-color: #111827; border: 1px solid #374151; border-radius: 6px; padding: 15px;">
+  <code style="color: #38bdf8;">VITE_SUPABASE_URL</code><br>
+  <code style="color: #a78bfa;">VITE_SUPABASE_ANON_KEY</code>
+  <p style="color: #6b7280; font-size: 12px; margin-top: 10px; font-style: italic;">
+    ⚠ These keys are exposed to the client. Do not use service roles here.
+  </p>
+</div>
 
-| Variable | Description | Required |
-|:---|:---|:---:|
-| `VITE_SUPABASE_URL` | API URL for your Supabase project | Yes |
-| `VITE_SUPABASE_ANON_KEY` | Anon public key for client connection | Yes |
+<!-- SECTION 4: BEHAVIOR -->
+<h3 style="border-left: 3px solid #e5e7eb; padding-left: 10px; color: #e5e7eb; margin-top: 40px;">
+  CORE BEHAVIORS
+</h3>
+<ul style="color: #d1d5db; padding-left: 20px;">
+  <li>Realtime message stream (Postgres + Supabase Realtime)</li>
+  <li>Direct-to-client typing indicators</li>
+  <li>Emoji reactions attached to message IDs</li>
+  <li>System-level Join/Leave banners</li>
+  <li>Client-side rate limit visualization (cooldowns)</li>
+  <li>Optional "AI Rewrite" display for moderated content</li>
+</ul>
 
-*Note: All variables prefixed with `VITE_` are exposed to the client browser.*
+<!-- SECTION 5: CONSTRAINTS -->
+<h3 style="border-left: 3px solid #ef4444; padding-left: 10px; color: #ef4444; margin-top: 40px;">
+  INTENTIONAL CONSTRAINTS
+</h3>
+<ul style="color: #d1d5db; padding-left: 20px;">
+  <li><b>Single Room Only:</b> No channels, no logical partitions.</li>
+  <li><b>No Chat History Persistence:</b> Clients only fetch recent history on load.</li>
+  <li><b>No Auth:</b> User identity is session-based and fleeting.</li>
+</ul>
 
-### `.env.example`
+<!-- SECTION 6: NOTE -->
+<div style="margin-top: 50px; border-top: 1px solid #374151; padding-top: 20px; color: #6b7280; font-size: 13px; font-family: monospace;">
+  <strong style="color: #9ca3af;">// NOTE TO FUTURE ME</strong><br>
+  This repo is the "View" layer. Do not put business logic or heavy moderation rules here. 
+  If it doesn't happen in the browser or via a subscribe event, it doesn't belong here. 
+  Keep it fast, keep it dumb. 🕹️
+</div>
 
-```ini
-VITE_SUPABASE_URL="https://your-project.supabase.co"
-VITE_SUPABASE_ANON_KEY="your-anon-key"
-```
-
-## Available Scripts
-
-- `npm run dev` - Start the Vite development server
-- `npm run build` - Build the application for production
-- `npm run preview` - Locally preview the production build
-
-## Feature Overview
-
-- **Realtime Messaging**: Instant message delivery and updates via Supabase Realtime.
-- **Typing Indicators**: Visual cues showing when other users are composing.
-- **Message Reactions**: Simple emoji reactions attached to messages.
-- **Join/Leave Banners**: System messages tracking user presence.
-- **Cooldowns**: Visual feedback when rate limits are active.
-- **AI Persona Rewrite**: Support for displaying rewritten system messages with custom styling.
-
-## UX & Design Notes
-
-This interface adopts a deliberate "Retro" aesthetic, prioritizing high-contrast text, clear borders, and immediate feedback over modern whitespace and animation. The design constraints are intentional: a single room, a single stream of consciousness, and zero friction to join.
-
-## Architecture
-
-The application is a standard Vue 3 Single Page Application (SPA). It initializes a Supabase client connection on load, subscribes to the realtime channel for the chatroom, and updates the local reactive state as events (INSERT, UDPATE) are received. No server-side rendering is performed; all logic executes in the client browser.
-
-## Package Manager Policy
-
-This project supports **npm** OR **pnpm**.
-
-- Do **not** commit both `package-lock.json` and `pnpm-lock.yaml`.
-- Ensure you commit the lockfile consistent with your chosen manager.
-
-## Project Structure
-
-```
-chronops-retrochat-vue/
-├── src/
-│   ├── components/      # ChatHistory, ChatInput, UserList
-│   ├── assets/          # CSS/SCSS and static images
-│   ├── router/          # Simple Vue Router config
-│   ├── App.vue          # Main layout and composition
-│   └── main.js          # App entry point
-├── public/              # Public static assets
-└── vite.config.js       # Vite configuration
-```
-
-## Roadmap
-
-1.  **Strict Typing**: Improve TypeScript coverage across all components.
-2.  **Performance**: Optimize large message list rendering (virtual scrolling).
-3.  **Resilience**: Better reconnection logic for spotty networks.
-4.  **Themes**: Toggle support for "Dark Mode" or alternative retro skins.
-5.  **Accessibilty**: Improved ARIA labels and keyboard navigation.
-
-## Contributing
-
-1.  Fork the repository.
-2.  Create a feature branch.
-3.  Push changes and open a Pull Request.
-
-Please create an issue to discuss significant UX changes or feature additions before starting work.
-
-## License
-
-MIT (See `LICENSE` file)
+</div>
