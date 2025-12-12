@@ -411,21 +411,27 @@ onMounted(() => {
   line-height: 1.4;
 }
 
+.message-line {
+    position: relative; /* Anchor for absolute button */
+}
+
 .add-reaction-btn {
     display: inline-block;
-    vertical-align: baseline; /* Aligns with text baseline */
-    margin-left: 8px;
-    background: transparent;
+    position: absolute; /* Float on top */
+    left: 0;
+    top: 2px; /* Align with text roughly */
+    margin-left: 0; /* Clear previous margin */
+    background: rgba(255, 255, 255, 0.9); /* Semi-transparent background to make button readable over text? User said floats on top ok. Let's stick to transparent first or maybe slight bg. */
+    background: transparent; 
     border: none;
     color: #999;
     cursor: pointer;
     font-size: 14px;
     line-height: 1;
-    padding: 2px 4px; /* Balanced padding */
-    border-radius: 4px; /* Soften edges */
-    opacity: 0.5;
-    position: relative;
-    top: 2px; /* Visual tweak for Smiley baseline */
+    padding: 2px 4px;
+    border-radius: 4px;
+    opacity: 0.8; /* More visible since it overlays */
+    z-index: 10;
 }
 
 /* Use Smiley Face */
@@ -434,13 +440,19 @@ onMounted(() => {
     margin-right: -2px; /* Pull + closer to ☺ */
 }
 
-.add-reaction-btn:hover {
-    color: #444; /* Darker than #999 */
-    opacity: 1;
-    background: transparent;
-    /* Removed font-weight: bold */
+@media (hover: hover) {
+    .add-reaction-btn:hover {
+        color: #444; /* Darker than #999 */
+        opacity: 1;
+        background: transparent;
+        /* Removed font-weight: bold */
+    }
 }
-
+/* Active state for mobile touch feedback */
+.add-reaction-btn:active {
+    color: #000;
+    opacity: 1;
+}
 .add-reaction-btn::after {
     content: none;
 }
