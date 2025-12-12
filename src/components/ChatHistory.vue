@@ -358,7 +358,7 @@ onMounted(() => {
             @click.stop="openPalette($event, msg.id)"
             title="React"
         >
-            +
+            <span class="retro-smiley">☺&#xFE0E;</span> +
         </button>
       </div>
     </div>
@@ -452,6 +452,13 @@ onMounted(() => {
     border-radius: 4px;
     opacity: 0.8;
     z-index: 10;
+}
+
+.retro-smiley {
+    font-family: "Times New Roman", Times, serif; /* Force serif for retro look */
+    font-weight: normal;
+    font-style: normal;
+    margin-right: 2px;
 }
 
 /* Use Smiley Face */
