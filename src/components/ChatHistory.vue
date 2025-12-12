@@ -434,9 +434,10 @@ onMounted(() => {
 }
 
 .add-reaction-btn:hover {
-    color: #000080;
+    color: #444; /* Darker than #999, but not full black or blue */
     opacity: 1;
-    background: #e0e0e0;
+    background: transparent; /* No background */
+    font-weight: bold; /* Make it "darker"/heavier visually */
 }
 
 .add-reaction-btn::after {
