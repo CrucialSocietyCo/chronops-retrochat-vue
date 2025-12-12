@@ -99,7 +99,7 @@ const handleMessageSent = (text) => {
 
 <template>
   <div class="chat-interface">
-    <ChatHistory ref="historyRef" :show-history="showHistory" />
+    <ChatHistory ref="historyRef" :show-history="showHistory" :client-id="clientId" />
     <JoinBannerRow :banner="joinBanner" />
     <TypingIndicatorRow :is-visible="isTypingVisible" />
     <ChatInput 

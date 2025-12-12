@@ -44,9 +44,15 @@ const checkAdminAuth = async () => {
         console.log('Admin authenticated via backend session')
         handleLogin('Admin')
       }
+    } else if (res.status === 401) {
+        // Expected for normal users, fail silently
+    } else {
+        // Real error
+        console.warn('Admin auth check failed:', res.status)
     }
   } catch (err) {
-    console.error('Failed to check admin auth:', err)
+    // Network errors, etc
+    console.debug('Failed to check admin auth (network):', err)
   }
 }
 

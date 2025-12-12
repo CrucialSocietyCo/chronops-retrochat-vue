@@ -58,12 +58,26 @@ const fetchMessages = async () => {
   try {
     // Poll since the last known message time (minus small buffer for safety)
     const pollTime = lastMessageTime > 0 ? lastMessageTime - 100 : 0
-    const res = await fetch(`${API_BASE}/api/messages?since=${pollTime}`)
+    // Include Client ID header for reaction personalization
+    const res = await fetch(`${API_BASE}/api/messages?since=${pollTime}`, {
+        headers: {
+            'x-session-id': props.clientId
+        }
+    })
+
     if (res.ok) {
       const newMessages = await res.json()
       console.log(`[ChatHistory] Polling: sent ${pollTime}, got ${newMessages.length} messages`)
       
       if (newMessages.length > 0) {
+          // Process Reactions for ALL fetched messages (Initial or New)
+          newMessages.forEach(msg => {
+            if (msg.reactions) {
+                reactionCounts[msg.id] = msg.reactions.counts
+                myReactions[msg.id] = new Set(msg.reactions.myReactions)
+            }
+          })
+
           // If we have new messages, append them
           
           // Initial Load Case (since == 0)
@@ -139,6 +153,10 @@ const props = defineProps({
   showHistory: {
     type: Boolean,
     default: true
+  },
+  clientId: {
+    type: String,
+    required: false
   }
 })
 
@@ -208,17 +226,124 @@ defineExpose({
   addMessage,
   scrollToBottom
 })
+
+/* --- REACTIONS LOGIC --- */
+import { reactive } from 'vue'
+import { supabase } from '../lib/supabase'
+import ReactionPills from './ReactionPills.vue'
+import ReactionPalette from './ReactionPalette.vue'
+
+// Determine if mobile (simple check)
+const isMobile = window.matchMedia("(max-width: 768px)").matches
+
+const activePalette = ref(null)
+const hoveredMessageId = ref(null)
+const reactionCounts = reactive({}) // msgId -> { like: 0, ... }
+const myReactions = reactive({}) // msgId -> Set('like', 'love')
+
+const openPalette = (event, messageId) => {
+    const rect = event.target.getBoundingClientRect()
+    // Open to the right of the button
+    activePalette.value = {
+        messageId,
+        position: {
+            top: rect.top - 8, // Align vertically center-ish
+            left: rect.right + 5 // Beside it
+        }
+    }
+}
+
+const toggleReaction = async (messageId, type) => {
+    // Optimistic Update
+    if (!reactionCounts[messageId]) reactionCounts[messageId] = {}
+    if (!myReactions[messageId]) myReactions[messageId] = new Set()
+
+    const mySet = myReactions[messageId]
+    const currentCount = reactionCounts[messageId][type] || 0
+    const isRemoving = mySet.has(type)
+
+    // Update Local State
+    if (isRemoving) {
+        mySet.delete(type)
+        reactionCounts[messageId][type] = Math.max(0, currentCount - 1)
+    } else {
+        mySet.add(type)
+        reactionCounts[messageId][type] = currentCount + 1
+    }
+
+    // Call API
+    try {
+        const endpoint = isRemoving ? '/api/reactions/remove' : '/api/reactions/add'
+        const res = await fetch(`${API_BASE}${endpoint}`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'x-session-id': props.clientId // Use Client ID as Session ID
+            },
+            body: JSON.stringify({ messageId, reactionType: type })
+        })
+
+        if (!res.ok) throw new Error('Reaction failed')
+
+        // If success, we *could* update from response, but realtime will handle authoritative sync
+    } catch (e) {
+        console.error('Reaction toggle failed', e)
+        // Rollback
+        if (isRemoving) {
+            mySet.add(type)
+            reactionCounts[messageId][type] = currentCount
+        } else {
+            mySet.delete(type)
+            reactionCounts[messageId][type] = currentCount
+        }
+    }
+}
+
+// Subscribe to Reaction Updates
+onMounted(() => {
+    if (supabase) {
+        const channel = supabase.channel('room:global')
+        channel.on('broadcast', { event: 'reaction_update' }, ({ payload }) => {
+            // Apply authoritative counts
+            reactionCounts[payload.messageId] = payload.counts
+        }).subscribe()
+    }
+})
 </script>
 
 <template>
   <div class="history-wrapper">
     <div ref="historyRef" class="chat-history" @scroll="handleScroll">
-      <div v-for="msg in messages" :key="msg.id" class="message-line" :class="{ 'admin-line': msg.isAdmin, 'system-line': msg.type === 'system' }">
+      <div 
+        v-for="msg in messages" 
+        :key="msg.id" 
+        class="message-line" 
+        :class="{ 'admin-line': msg.isAdmin, 'system-line': msg.type === 'system' }"
+        @mouseenter="hoveredMessageId = msg.id"
+        @mouseleave="hoveredMessageId = null"
+      >
         <span class="sender" :class="{ system: msg.type === 'system', admin: msg.isAdmin }">
           <span v-if="msg.isAdmin" class="admin-star">★ </span>
           {{ msg.sender }}:
         </span>
         <span class="content" :class="{ system: msg.type === 'system' }" v-html="msg.content || msg.text"></span>
+        
+        <!-- Inline Reactions -->
+        <ReactionPills 
+            :counts="reactionCounts[msg.id] || {}"
+            :my-reactions="myReactions[msg.id] || new Set()"
+            @toggle="(type) => toggleReaction(msg.id, type)"
+        />
+
+        <!-- Hover Add Button (Inline) -->
+        <button 
+            v-if="hoveredMessageId === msg.id && msg.type !== 'system'" 
+            class="add-reaction-btn"
+            @click.stop="openPalette($event, msg.id)"
+            title="React"
+        >
+            +
+        </button>
       </div>
     </div>
     
@@ -234,6 +359,15 @@ defineExpose({
             <span v-else>▼</span>
         </button>
     </Transition>
+
+    <ReactionPalette 
+        v-if="activePalette"
+        :message-id="activePalette.messageId"
+        :my-reactions="myReactions[activePalette.messageId] || new Set()"
+        :position="activePalette.position"
+        @select="(type) => toggleReaction(activePalette.messageId, type)"
+        @close="activePalette = null"
+    />
   </div>
 </template>
 
@@ -262,6 +396,28 @@ defineExpose({
   font-family: 'Arial', sans-serif;
   font-size: 13px;
   line-height: 1.4;
+}
+
+.add-reaction-btn {
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 6px;
+    background: transparent;
+    border: none;
+    color: #888;
+    cursor: pointer;
+    font-size: 11px;
+    line-height: 1;
+    padding: 0 2px;
+    opacity: 0.5;
+}
+
+.add-reaction-btn:hover {
+    color: #000080; /* Navy hover */
+    font-weight: bold;
+    opacity: 1;
+    background: transparent;
+    border: none;
 }
 
 .message-line.admin-line {
