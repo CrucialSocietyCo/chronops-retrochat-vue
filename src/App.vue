@@ -226,9 +226,9 @@ main {
 
 @media (max-width: 600px) {
   main {
-    /* Create ~30px spacing around the dialog */
-    max-width: calc(100% - 60px); 
-    max-height: calc(100% - 60px);
+    /* Maximize space on mobile: ~10px spacing */
+    max-width: calc(100% - 20px); 
+    max-height: calc(100% - 20px);
     height: 100%; /* Will be constrained by max-height */
     margin-bottom: 0;
   }

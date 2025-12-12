@@ -82,8 +82,8 @@ const onSelect = (type) => {
     background: transparent;
     border: 1px dotted transparent;
     cursor: pointer;
-    font-size: 16px;
-    padding: 2px 4px;
+    font-size: 14px; /* Reduced from 16px (~13%) */
+    padding: 1px 3px; /* Reduced padding */
     line-height: 1;
     border-radius: 0;
 }

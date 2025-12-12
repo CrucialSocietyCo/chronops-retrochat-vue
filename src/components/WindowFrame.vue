@@ -62,6 +62,9 @@ defineProps({
 .title-bar-left {
   display: flex;
   align-items: center;
+  flex: 1; /* Take available space */
+  min-width: 0; /* Allow shrinking */
+  margin-right: 4px; /* Space before controls */
 }
 
 .title-bar-text {
@@ -70,6 +73,11 @@ defineProps({
   font-size: 13px;
   letter-spacing: 0.5px;
   margin-left: 2px;
+  /* Prevent wrapping */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis; 
+  margin-right: 6px;
 }
 
 .title-bar-controls {

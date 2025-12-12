@@ -261,8 +261,27 @@ const sendMessage = async () => {
 }
 
 const showEmoticons = ref(false)
-// Generate array of 100 local emoticon paths
-const emoticons = Array.from({ length: 244 }, (_, i) => `/emoticons/smiley_${i}.png`)
+
+// Organize 244 emoticons into sets
+const emoticonCategories = computed(() => {
+    const total = 244
+    const sets = [
+        { title: 'Classics', start: 0, end: 60 },
+        { title: 'Variety', start: 61, end: 120 },
+        { title: 'Actions', start: 121, end: 180 },
+        { title: 'Extras', start: 181, end: 243 }
+    ]
+    
+    return sets.map(set => ({
+        title: set.title,
+        urls: Array.from(
+            { length: set.end - set.start + 1 }, 
+            (_, i) => `/emoticons/smiley_${set.start + i}.png`
+        )
+    }))
+})
+
+// const emoticons = ... (removed flat list)
 const emoticonPickerRef = ref(null)
 const emoticonButtonRef = ref(null)
 
@@ -407,13 +426,19 @@ const handleInput = () => {
             <img src="/emoticon_button.png" alt="Emoticons" />
           </button>
           <div v-if="showEmoticons" ref="emoticonPickerRef" class="emoticon-picker">
-            <img 
-              v-for="(url, index) in emoticons" 
-              :key="index" 
-              :src="url" 
-              @click="insertEmoticon(url)"
-              class="emoticon-option"
-            />
+            <!-- Categories -->
+            <div v-for="cat in emoticonCategories" :key="cat.title" class="emoticon-category">
+                <div class="category-header">{{ cat.title }}</div>
+                <div class="category-grid">
+                    <img 
+                      v-for="(url, index) in cat.urls" 
+                      :key="index" 
+                      :src="url" 
+                      @click="insertEmoticon(url)"
+                      class="emoticon-option"
+                    />
+                </div>
+            </div>
           </div>
         </div>
       </div>
@@ -499,14 +524,32 @@ const handleInput = () => {
   border-bottom-color: #404040;
   box-shadow: 1px 1px 0 0 #000;
   padding: 4px;
-  display: grid;
-  grid-template-columns: repeat(10, 1fr); /* Increased columns for 100 icons */
-  gap: 2px;
-  width: 320px; /* Increased width to prevent horizontal scrollbar */
-  max-height: 200px; /* Scrollable if needed */
-  overflow-y: scroll; /* Force vertical scrollbar */
-  overflow-x: hidden; /* Hide horizontal scrollbar */
+  /* Changed from grid to flex-column for categories */
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(320px, 90vw); /* Responsive width */
+  max-height: 250px; 
+  overflow-y: auto; 
+  overflow-x: hidden;
   z-index: 100;
+}
+
+.category-header {
+    background: #000080;
+    color: white;
+    padding: 2px 4px;
+    font-size: 11px;
+    font-weight: bold;
+    margin-bottom: 2px;
+    text-transform: uppercase;
+}
+
+.category-grid {
+    display: grid;
+    /* Auto-fill columns based on available space */
+    grid-template-columns: repeat(auto-fill, minmax(28px, 1fr));
+    gap: 2px;
 }
 
 .emoticon-option {
