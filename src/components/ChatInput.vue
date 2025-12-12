@@ -21,7 +21,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['message-sent'])
+const emit = defineEmits(['message-sent', 'typing'])
 const inputRef = ref(null)
 
 // Modal State
@@ -355,6 +355,10 @@ const insertGif = (url) => {
   showGifPicker.value = false
   document.removeEventListener('click', handleClickOutside)
 }
+
+const handleInput = () => {
+  emit('typing')
+}
 </script>
 
 <template>
@@ -420,6 +424,7 @@ const insertGif = (url) => {
       class="input-box" 
       :contenteditable="isInputActive" 
       @keydown.enter.prevent="sendMessage"
+      @input="handleInput"
       :style="{ 
         backgroundColor: isInputActive ? '#ffffff' : '#e0e0e0', 
         cursor: isInputActive ? 'text' : 'not-allowed',

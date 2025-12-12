@@ -3,7 +3,9 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import ChatHistory from './ChatHistory.vue'
 import ChatInput from './ChatInput.vue'
 import JoinBannerRow from './JoinBannerRow.vue'
+import TypingIndicatorRow from './TypingIndicatorRow.vue'
 import { useJoinBanner } from '../composables/useJoinBanner.js'
+import { useTyping } from '../composables/useTyping.js'
 import { createClient } from '@supabase/supabase-js'
 
 const props = defineProps({
@@ -35,6 +37,7 @@ const props = defineProps({
 
 const historyRef = ref(null)
 const { joinBanner, handleUserJoined } = useJoinBanner()
+const { isTypingVisible, startTyping, handleTypingUpdate } = useTyping(props.authToken, props.clientId)
 
 // Realtime Setup
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
@@ -52,6 +55,9 @@ onMounted(async () => {
     channel
       .on('broadcast', { event: 'user_joined' }, (payload) => {
         handleUserJoined(payload.payload)
+      })
+      .on('broadcast', { event: 'typing_update' }, (payload) => {
+        handleTypingUpdate(payload.payload.isActive)
       })
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
@@ -95,12 +101,14 @@ const handleMessageSent = (text) => {
   <div class="chat-interface">
     <ChatHistory ref="historyRef" :show-history="showHistory" />
     <JoinBannerRow :banner="joinBanner" />
+    <TypingIndicatorRow :is-visible="isTypingVisible" />
     <ChatInput 
       :username="username" 
       :is-chat-enabled="isChatEnabled"
       :auth-token="authToken"
       :client-id="clientId"
       @message-sent="handleMessageSent" 
+      @typing="startTyping"
     />
     <div v-if="showSponsored" class="text-ad-container">
       <div class="text-ad">
