@@ -431,17 +431,18 @@ onMounted(() => {
 /* Use Smiley Face */
 .add-reaction-btn::before {
     content: '☺'; 
+    margin-right: -2px; /* Pull + closer to ☺ */
 }
 
 .add-reaction-btn:hover {
-    color: #444; /* Darker than #999, but not full black or blue */
+    color: #444; /* Darker than #999 */
     opacity: 1;
-    background: transparent; /* No background */
-    font-weight: bold; /* Make it "darker"/heavier visually */
+    background: transparent;
+    /* Removed font-weight: bold */
 }
 
 .add-reaction-btn::after {
-    content: none; /* Remove right bracket */
+    content: none;
 }
 
 .message-line.admin-line {
