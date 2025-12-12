@@ -256,12 +256,12 @@ const badgeIcon = computed(() => {
 
 const openPalette = (event, messageId) => {
     const rect = event.target.getBoundingClientRect()
-    // Open to the right of the button
+    // Open to the LEFT of the button
     activePalette.value = {
         messageId,
         position: {
             top: rect.top - 8, // Align vertically center-ish
-            left: rect.right + 5 // Beside it
+            left: rect.left - 175 // Shift left by approx width (6 emojis * ~28px) to appear "sliding out"
         }
     }
 }
@@ -373,16 +373,33 @@ onMounted(() => {
         </button>
     </Transition>
 
-    <ReactionPalette 
-        v-if="activePalette"
-        :message-id="activePalette.messageId"
-        :my-reactions="myReactions[activePalette.messageId] || new Set()"
-        :position="activePalette.position"
-        @select="(type) => toggleReaction(activePalette.messageId, type)"
-        @close="activePalette = null"
-    />
+    <Transition name="slide-left">
+        <ReactionPalette 
+            v-if="activePalette"
+            :message-id="activePalette.messageId"
+            :my-reactions="myReactions[activePalette.messageId] || new Set()"
+            :position="activePalette.position"
+            @select="(type) => toggleReaction(activePalette.messageId, type)"
+            @close="activePalette = null"
+        />
+    </Transition>
   </div>
 </template>
+
+<style scoped>
+/* ... existing styles ... */
+.slide-left-enter-active,
+.slide-left-leave-active {
+  transition: all 0.2s ease-out;
+}
+
+.slide-left-enter-from,
+.slide-left-leave-to {
+  opacity: 0;
+  transform: translateX(20px); /* Start slightly right, slide left to 0 */
+}
+</style>
+
 
 <style scoped>
 .history-wrapper {
