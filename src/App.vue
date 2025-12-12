@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted, watch } from 'vue'
 import WindowFrame from './components/WindowFrame.vue'
 import ChatInterface from './components/ChatInterface.vue'
 import LoginScreen from './components/LoginScreen.vue'
+import PinnedBar from './components/PinnedBar.vue'
 
 const isLoggedIn = ref(false)
 const username = ref('')
@@ -166,24 +167,27 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <main>
-    <LoginScreen 
-      v-if="!isLoggedIn" 
-      @login="handleLogin" 
-      :is-chat-enabled="isChatEnabled"
-    />
-    <WindowFrame v-else :title="windowTitle" :event-mode="eventMode">
-      <ChatInterface 
-        :username="username" 
+  <div class="app-container">
+    <PinnedBar />
+    <main>
+      <LoginScreen 
+        v-if="!isLoggedIn" 
+        @login="handleLogin" 
         :is-chat-enabled="isChatEnabled"
-        :show-history="showHistory" 
-        :show-sponsored="showSponsored"
-        :auth-token="authToken"
-        :client-id="clientId"
-        :badge-style="badgeStyle"
       />
-    </WindowFrame>
-  </main>
+      <WindowFrame v-else :title="windowTitle" :event-mode="eventMode">
+        <ChatInterface 
+          :username="username" 
+          :is-chat-enabled="isChatEnabled"
+          :show-history="showHistory" 
+          :show-sponsored="showSponsored"
+          :auth-token="authToken"
+          :client-id="clientId"
+          :badge-style="badgeStyle"
+        />
+      </WindowFrame>
+    </main>
+  </div>
 </template>
 
 <style>
@@ -237,5 +241,19 @@ main {
       height: 100%;
       align-items: center; /* Center Vertically */
   }
+}
+
+.app-container {
+    width: 100%;
+    max-width: 510px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    justify-content: center; /* Centers main vertically if height allows */
+}
+
+/* Ensure main doesn't double margin if container handles it */
+main {
+    margin-bottom: 0;
 }
 </style>

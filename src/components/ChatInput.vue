@@ -264,7 +264,12 @@ const showEmoticons = ref(false)
 
 // Organize 244 emoticons into sets
 const emoticonCategories = computed(() => {
-    const total = 244
+    // Indices of files that are placeholders/broken (size ~73 bytes)
+    const brokenIndices = [
+        214, 220, 222, 224, 226, 228, 
+        230, 233, 235, 237, 239, 241, 243
+    ]
+
     const sets = [
         { title: 'Classics', start: 0, end: 60 },
         { title: 'Variety', start: 61, end: 120 },
@@ -272,13 +277,20 @@ const emoticonCategories = computed(() => {
         { title: 'Extras', start: 181, end: 243 }
     ]
     
-    return sets.map(set => ({
-        title: set.title,
-        urls: Array.from(
-            { length: set.end - set.start + 1 }, 
-            (_, i) => `/emoticons/smiley_${set.start + i}.png`
-        )
-    }))
+    return sets.map(set => {
+        // Generate valid indices
+        const validIndices = []
+        for (let i = set.start; i <= set.end; i++) {
+            if (!brokenIndices.includes(i)) {
+                validIndices.push(i)
+            }
+        }
+
+        return {
+            title: set.title,
+            urls: validIndices.map(i => `/emoticons/smiley_${i}.png`)
+        }
+    })
 })
 
 // const emoticons = ... (removed flat list)
@@ -353,15 +365,42 @@ const handleClickOutside = (event) => {
   }
 }
 
-const searchGifs = async () => {
+const gifNextCursor = ref('')
+const isLoadingGifs = ref(false)
+
+const searchGifs = async (isLoadMore = false) => {
+  if (isLoadingGifs.value) return
+
+  if (!isLoadMore) {
+      gifResults.value = []
+      gifNextCursor.value = ''
+  }
+
+  isLoadingGifs.value = true
   const query = gifSearchQuery.value || 'trending'
   const key = 'LIVDSRZULELA' // Legacy public key
+  const limit = 20
+  
+  let url = `https://g.tenor.com/v1/search?q=${query}&key=${key}&limit=${limit}`
+  if (isLoadMore && gifNextCursor.value) {
+      url += `&pos=${gifNextCursor.value}`
+  }
+
   try {
-    const res = await fetch(`https://g.tenor.com/v1/search?q=${query}&key=${key}&limit=10`)
+    const res = await fetch(url)
     const data = await res.json()
-    gifResults.value = data.results
+    
+    if (isLoadMore) {
+        gifResults.value = [...gifResults.value, ...data.results]
+    } else {
+        gifResults.value = data.results
+    }
+    
+    gifNextCursor.value = data.next || ''
   } catch (err) {
     console.error('Failed to fetch GIFs:', err)
+  } finally {
+    isLoadingGifs.value = false
   }
 }
 
@@ -418,6 +457,14 @@ const handleInput = () => {
                 @click="insertGif(gif.media[0].tinygif.url)"
                 class="gif-option"
               />
+              <button 
+                  v-if="gifNextCursor && !isLoadingGifs" 
+                  @click.stop="searchGifs(true)" 
+                  class="load-more-btn"
+              >
+                  More...
+              </button>
+              <div v-if="isLoadingGifs" class="loading-gifs">Loading...</div>
             </div>
           </div>
         </div>
@@ -585,6 +632,28 @@ const handleInput = () => {
   width: 16px;
   height: 16px;
   display: block;
+}
+
+.load-more-btn {
+    grid-column: span 2;
+    padding: 8px;
+    background: #c0c0c0;
+    border: 1px outset #fff;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.load-more-btn:active {
+    border-style: inset;
+}
+
+.loading-gifs {
+    grid-column: span 2;
+    text-align: center;
+    padding: 10px;
+    font-size: 11px;
+    color: #404040;
 }
 </style>
 
