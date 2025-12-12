@@ -396,7 +396,7 @@ onMounted(() => {
 .slide-left-enter-from,
 .slide-left-leave-to {
   opacity: 0;
-  transform: translateX(20px); /* Start slightly right, slide left to 0 */
+  transform: translateX(40px); /* Slide deeper from the right */
 }
 </style>
 
