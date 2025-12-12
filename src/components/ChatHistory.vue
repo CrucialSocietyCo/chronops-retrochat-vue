@@ -413,13 +413,14 @@ onMounted(() => {
 
 .message-line {
     position: relative; /* Anchor for absolute button */
+    padding-right: 24px; /* Reserve space for the button so text doesn't overlap */
 }
 
 .add-reaction-btn {
     display: inline-block;
-    position: absolute; /* Float on top */
-    right: 4px; /* Align to right edge */
-    top: 2px; /* Align with text roughly */
+    position: absolute; /* Float */
+    right: 2px; /* Bottom Right Corner */
+    bottom: 2px;
     margin-left: 0; 
     background: transparent; 
     border: none;
