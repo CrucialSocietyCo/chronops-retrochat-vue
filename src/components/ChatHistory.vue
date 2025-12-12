@@ -418,10 +418,9 @@ onMounted(() => {
 .add-reaction-btn {
     display: inline-block;
     position: absolute; /* Float on top */
-    left: 0;
+    right: 4px; /* Align to right edge */
     top: 2px; /* Align with text roughly */
-    margin-left: 0; /* Clear previous margin */
-    background: rgba(255, 255, 255, 0.9); /* Semi-transparent background to make button readable over text? User said floats on top ok. Let's stick to transparent first or maybe slight bg. */
+    margin-left: 0; 
     background: transparent; 
     border: none;
     color: #999;
@@ -430,7 +429,7 @@ onMounted(() => {
     line-height: 1;
     padding: 2px 4px;
     border-radius: 4px;
-    opacity: 0.8; /* More visible since it overlays */
+    opacity: 0.8;
     z-index: 10;
 }
 
