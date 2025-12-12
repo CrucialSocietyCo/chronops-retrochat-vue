@@ -213,7 +213,7 @@ defineExpose({
 <template>
   <div class="history-wrapper">
     <div ref="historyRef" class="chat-history" @scroll="handleScroll">
-      <div v-for="msg in messages" :key="msg.id" class="message-line" :class="{ 'admin-line': msg.isAdmin }">
+      <div v-for="msg in messages" :key="msg.id" class="message-line" :class="{ 'admin-line': msg.isAdmin, 'system-line': msg.type === 'system' }">
         <span class="sender" :class="{ system: msg.type === 'system', admin: msg.isAdmin }">
           <span v-if="msg.isAdmin" class="admin-star">★ </span>
           {{ msg.sender }}:
@@ -278,8 +278,19 @@ defineExpose({
   margin-right: 4px;
 }
 
+.message-line.system-line {
+  background-color: #f8f8ff; /* GhostWhite */
+  border-left: 3px solid #6A5ACD; /* SlateBlue */
+  padding-left: 6px; /* Offset text slightly */
+  margin-bottom: 4px;
+}
+
 .sender.system {
-  color: blue;
+  color: #6A5ACD; /* SlateBlue */
+}
+
+.sender.system::before {
+  content: "✨ ";
 }
 
 .sender.admin {
