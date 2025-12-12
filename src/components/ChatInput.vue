@@ -155,7 +155,8 @@ const sendMessage = async () => {
   try {
     const headers = { 
       'Content-Type': 'application/json',
-      'x-client-id': props.clientId 
+      'x-client-id': props.clientId,
+      'x-session-id': props.clientId 
     }
     if (props.authToken) {
       headers['Authorization'] = `Bearer ${props.authToken}`

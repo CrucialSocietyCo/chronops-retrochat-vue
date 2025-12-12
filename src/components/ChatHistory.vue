@@ -31,6 +31,22 @@ let pollInterval
 let lastLocalUpdate = 0
 let lastMessageTime = 0 // Track the internal latest timestamp
 const sessionStart = Date.now()
+const isAtBottom = ref(true)
+const hasUnreadMessages = ref(false)
+
+const handleScroll = (e) => {
+    const el = e.target
+    // Check if we are close to bottom - User wants to catch it sooner
+    const bottomThreshold = 150 
+    const currentlyAtBottom = el.scrollHeight - el.scrollTop - el.clientHeight < bottomThreshold
+    
+    isAtBottom.value = currentlyAtBottom
+    
+    // If we scroll to bottom, clear unread flag
+    if (currentlyAtBottom) {
+        hasUnreadMessages.value = false
+    }
+}
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000'
 
@@ -95,7 +111,11 @@ const fetchMessages = async () => {
                if (reallyNew.length > 0) {
                    messages.value = [...messages.value, ...reallyNew]
                    // Only scroll if we added new items
-                   scrollToBottom()
+                   if (isAtBottom.value) {
+                       scrollToBottom()
+                   } else {
+                       hasUnreadMessages.value = true
+                   }
                }
           }
 
@@ -187,7 +207,7 @@ defineExpose({
 </script>
 
 <template>
-  <div class="chat-history">
+  <div class="chat-history" @scroll="handleScroll">
     <div v-for="msg in messages" :key="msg.id" class="message-line" :class="{ 'admin-line': msg.isAdmin }">
       <span class="sender" :class="{ system: msg.type === 'system', admin: msg.isAdmin }">
         <span v-if="msg.isAdmin" class="admin-star">★ </span>
@@ -195,11 +215,23 @@ defineExpose({
       </span>
       <span class="content" :class="{ system: msg.type === 'system' }" v-html="msg.content || msg.text"></span>
     </div>
+    
+    <button 
+        v-if="!isAtBottom" 
+        class="jump-btn" 
+        :class="{ 'has-new': hasUnreadMessages }"
+        @click="scrollToBottom(true)"
+        :title="hasUnreadMessages ? 'New Messages' : 'Scroll to Bottom'"
+    >
+        <span v-if="hasUnreadMessages">New!</span>
+        <span v-else>▼</span>
+    </button>
   </div>
 </template>
 
 <style scoped>
 .chat-history {
+  position: relative;
   flex-grow: 1;
   background: white;
   /* Classic Windows 95 "Sunken" Field */
@@ -265,5 +297,41 @@ defineExpose({
   max-width: 72px;
   max-height: 72px;
   border-radius: 4px;
+}
+
+.jump-btn {
+  position: absolute;
+  bottom: 10px;
+  right: 20px;
+  background: #c0c0c0;
+  border: 2px outset #ffffff;
+  box-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Arial', sans-serif;
+  font-weight: bold;
+  font-size: 16px;
+  cursor: pointer;
+  z-index: 100;
+  color: #000;
+  opacity: 1;
+}
+
+.jump-btn:hover {
+  background: #d0d0d0;
+}
+
+.jump-btn.has-new {
+  color: red;
+  border-color: #ff0000; /* Red border for urgency */
+  /* No background change, just icon/border color */
+}
+
+.jump-btn:active {
+  border-style: inset;
 }
 </style>
