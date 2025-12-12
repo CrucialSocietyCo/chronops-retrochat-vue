@@ -49,6 +49,35 @@ const triggerModal = (title, message, type = 'info', durationSeconds = 0) => {
     }
 }
 
+// Moderation State
+const moderationLock = ref(false)
+const lockExpiry = ref(null)
+const moderationReason = ref('')
+let lockTimer = null
+
+const startLockCountdown = (expiresAt) => {
+    moderationLock.value = true
+    lockExpiry.value = new Date(expiresAt)
+    
+    if (lockTimer) clearInterval(lockTimer)
+    
+    lockTimer = setInterval(() => {
+        const now = new Date()
+        if (now >= lockExpiry.value) {
+            moderationLock.value = false
+            moderationReason.value = ''
+            clearInterval(lockTimer)
+            lockTimer = null
+        }
+    }, 1000)
+}
+
+const isInputActive = computed(() => props.isChatEnabled && !moderationLock.value)
+const placeholderText = computed(() => {
+    if (moderationLock.value) return `Muted: ${moderationReason.value || 'Temporarily disabled'}`
+    return ''
+})
+
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000'
 
 const executeCommand = async (command, args) => {
@@ -153,10 +182,25 @@ const sendMessage = async () => {
           const diffSeconds = Math.ceil((expires - now) / 1000)
           
           triggerModal('System Alert', data.data.message, 'error', diffSeconds > 0 ? diffSeconds : 0)
+          moderationReason.value = "Rate Limited"
+          startLockCountdown(data.data.expires_at)
+
       } else if (data.data?.code === 'BANNED') {
            triggerModal('BANNED', data.data.message, 'error')
+           moderationLock.value = true
+           moderationReason.value = "Banned"
+
       } else if (data.data?.code === 'MUTED') {
            triggerModal('Muted', data.data.message, 'warning')
+           // If we had expiry here we could use it, assume perm or untimed for now unless logic updated
+           // Actually backend sends expires_at for mutes too now
+           if (data.data.expires_at) {
+               startLockCountdown(data.data.expires_at)
+           } else {
+               moderationLock.value = true // Permanent/Indefinite
+           }
+           moderationReason.value = "Muted"
+
       } else if (data.data?.code === 'MESSAGE_TOO_LONG') {
          triggerModal('Message Rejected', data.data.message, 'warning')
       } else if (data.data?.code === 'CONTENT_BLOCKED') {
@@ -324,14 +368,19 @@ const insertGif = (url) => {
           </div>
         </div>
       </div>
-      <button class="send-btn" @click="sendMessage" :disabled="!isChatEnabled">Send</button>
+      <button class="send-btn" @click="sendMessage" :disabled="!isInputActive">Send</button>
     </div>
     <div 
       ref="inputRef" 
       class="input-box" 
-      :contenteditable="isChatEnabled" 
+      :contenteditable="isInputActive" 
       @keydown.enter.prevent="sendMessage"
-      :style="{ backgroundColor: isChatEnabled ? '#ffffff' : '#f0f0f0', cursor: isChatEnabled ? 'text' : 'not-allowed' }"
+      :style="{ 
+        backgroundColor: isInputActive ? '#ffffff' : '#e0e0e0', 
+        cursor: isInputActive ? 'text' : 'not-allowed',
+        color: isInputActive ? 'inherit' : '#808080'
+      }"
+      :data-placeholder="placeholderText" 
     ></div>
   </div>
 </template>
@@ -538,6 +587,13 @@ const insertGif = (url) => {
   resize: none;
   outline: none;
   overflow-y: auto;
+}
+
+.input-box:empty:not(:focus):before {
+  content: attr(data-placeholder);
+  color: #ff0000;
+  font-style: italic;
+  font-weight: bold;
 }
 
 .input-box :deep(img) {
