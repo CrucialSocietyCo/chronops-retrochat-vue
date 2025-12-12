@@ -414,23 +414,32 @@ onMounted(() => {
 .add-reaction-btn {
     display: inline-block;
     vertical-align: middle;
-    margin-left: 6px;
+    margin-left: 8px;
     background: transparent;
     border: none;
-    color: #888;
+    color: #999;
     cursor: pointer;
-    font-size: 11px;
+    font-size: 14px; /* Balanced size */
     line-height: 1;
-    padding: 0 2px;
-    opacity: 0.5;
+    padding: 0 4px;
+    opacity: 0.5; /* Subtle by default */
+    /* Removed Times New Roman to match UI */
+}
+
+/* Use Smiley Face */
+.add-reaction-btn::before {
+    content: '☺'; 
 }
 
 .add-reaction-btn:hover {
-    color: #000080; /* Navy hover */
-    font-weight: bold;
+    color: #000080; /* Classic Navy Blue */
     opacity: 1;
-    background: transparent;
-    border: none;
+    background: #e0e0e0; /* Subtle highlight box */
+    /* Removed scale and text-shadow */
+}
+
+.add-reaction-btn::after {
+    content: none; /* Remove right bracket */
 }
 
 .message-line.admin-line {
