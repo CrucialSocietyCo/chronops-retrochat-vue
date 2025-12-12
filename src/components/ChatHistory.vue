@@ -425,7 +425,7 @@ onMounted(() => {
     inset 2px 2px 0 0 #000000,
     inset -2px -2px 0 0 #c0c0c0;
   overflow-y: scroll; /* Always show scrollbar */
-  padding: 4px;
+  padding: 8px;
   font-family: 'Arial', sans-serif;
   font-size: 13px;
   line-height: 1.4;
@@ -497,6 +497,7 @@ onMounted(() => {
   border-left: 3px solid #6A5ACD; /* SlateBlue */
   padding-left: 6px; /* Offset text slightly */
   margin-bottom: 4px;
+  margin-top: 4px;
 }
 
 .sender.system {
