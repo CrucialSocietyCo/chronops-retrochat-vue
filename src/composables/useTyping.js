@@ -48,8 +48,14 @@ export function useTyping(authToken, clientId) {
         }, DEBOUNCE_MS)
     }
 
-    const handleTypingUpdate = (isActive) => {
-        isTypingVisible.value = isActive
+    const handleTypingUpdate = (activeUserIds) => {
+        if (Array.isArray(activeUserIds)) {
+            // Show only if someone ELSE is typing
+            isTypingVisible.value = activeUserIds.some(id => id !== clientId)
+        } else {
+            // Fallback or legacy boolean
+            isTypingVisible.value = !!activeUserIds
+        }
     }
 
     return {

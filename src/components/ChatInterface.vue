@@ -57,7 +57,7 @@ onMounted(async () => {
         handleUserJoined(payload.payload)
       })
       .on('broadcast', { event: 'typing_update' }, (payload) => {
-        handleTypingUpdate(payload.payload.isActive)
+        handleTypingUpdate(payload.payload.activeUserIds)
       })
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
