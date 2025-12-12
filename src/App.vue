@@ -88,7 +88,7 @@ const checkChatStatus = async () => {
         colorTheme.value = data.color_theme
         applyTheme(data.color_theme)
       }
-    }
+
 
     if (data.admin_badge_style) {
         badgeStyle.value = data.admin_badge_style
