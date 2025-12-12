@@ -45,7 +45,7 @@ const handleScroll = (e) => {
     }
 }
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000'
+import { API_BASE } from '@/config'
 
 const fetchMessages = async () => {
   // Skip fetching if we updated locally recently

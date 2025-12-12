@@ -1,5 +1,6 @@
 import { ref } from 'vue'
 import { useAnalytics } from './useAnalytics'
+import { API_BASE } from '../config'
 
 const THROTTLE_MS = 2000
 const DEBOUNCE_MS = 1000
@@ -17,7 +18,7 @@ export function useTyping(authToken, clientId) {
     let burstEndTimer = null
     let lastKeystrokeTime = 0
 
-    const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000'
+
 
     const notifyServer = async (status) => {
         try {

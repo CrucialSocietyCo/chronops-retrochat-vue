@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000'
+import { API_BASE } from '../config'
 
 export function useAnalytics() {
     const trackClientEvent = async (eventName, payload = {}, clientId) => {

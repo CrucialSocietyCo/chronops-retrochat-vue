@@ -1,7 +1,8 @@
+import { API_BASE } from '../config'
+
 export function useVoiceDropsApi() {
 
     // Use the same environment variable as ChatHistory
-    const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000'
 
     const uploadVoiceDrop = async (blob, durationMs, token) => {
         if (!blob) throw new Error('No audio blob provided')
