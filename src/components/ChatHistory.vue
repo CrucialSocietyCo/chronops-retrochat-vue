@@ -157,6 +157,10 @@ const props = defineProps({
   clientId: {
     type: String,
     required: false
+  },
+  badgeStyle: {
+    type: String,
+    default: 'Star Icon'
   }
 })
 
@@ -228,7 +232,7 @@ defineExpose({
 })
 
 /* --- REACTIONS LOGIC --- */
-import { reactive } from 'vue'
+import { reactive, computed } from 'vue'
 import { supabase } from '../lib/supabase'
 import ReactionPills from './ReactionPills.vue'
 import ReactionPalette from './ReactionPalette.vue'
@@ -240,6 +244,15 @@ const activePalette = ref(null)
 const hoveredMessageId = ref(null)
 const reactionCounts = reactive({}) // msgId -> { like: 0, ... }
 const myReactions = reactive({}) // msgId -> Set('like', 'love')
+
+const badgeIcon = computed(() => {
+    switch (props.badgeStyle) {
+        case 'Key Icon': return '🔑'
+        case 'System Icon': return '🛡️'
+        case 'Star Icon':
+        default: return '★'
+    }
+})
 
 const openPalette = (event, messageId) => {
     const rect = event.target.getBoundingClientRect()
@@ -323,7 +336,7 @@ onMounted(() => {
         @mouseleave="hoveredMessageId = null"
       >
         <span class="sender" :class="{ system: msg.type === 'system', admin: msg.isAdmin }">
-          <span v-if="msg.isAdmin" class="admin-star">★ </span>
+          <span v-if="msg.isAdmin" class="admin-star">{{ badgeIcon }} </span>
           {{ msg.sender }}:
         </span>
         <span class="content" :class="{ system: msg.type === 'system' }" v-html="msg.content || msg.text"></span>

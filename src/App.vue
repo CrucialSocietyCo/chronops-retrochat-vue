@@ -12,6 +12,7 @@ const showSponsored = ref(true)
 const windowTitle = ref('Arts and Entertainment - Red Dragon Inn')
 const eventMode = ref('Live Event')
 const colorTheme = ref('Teal Base')
+const badgeStyle = ref('Star Icon')
 const authToken = ref('')
 const clientId = ref('')
 let pollInterval
@@ -83,11 +84,14 @@ const checkChatStatus = async () => {
     if (data.chat_mode) eventMode.value = data.chat_mode
     
     // Theme handling
-    if (data.color_theme) {
       if (data.color_theme !== colorTheme.value) {
         colorTheme.value = data.color_theme
         applyTheme(data.color_theme)
       }
+    }
+
+    if (data.admin_badge_style) {
+        badgeStyle.value = data.admin_badge_style
     }
     
     // Dynamic Favicon
@@ -176,6 +180,7 @@ onUnmounted(() => {
         :show-sponsored="showSponsored"
         :auth-token="authToken"
         :client-id="clientId"
+        :badge-style="badgeStyle"
       />
     </WindowFrame>
   </main>

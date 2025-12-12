@@ -32,6 +32,10 @@ const props = defineProps({
   clientId: {
     type: String,
     default: ''
+  },
+  badgeStyle: {
+    type: String,
+    default: 'Star Icon'
   }
 })
 
@@ -99,7 +103,7 @@ const handleMessageSent = (text) => {
 
 <template>
   <div class="chat-interface">
-    <ChatHistory ref="historyRef" :show-history="showHistory" :client-id="clientId" />
+    <ChatHistory ref="historyRef" :show-history="showHistory" :client-id="clientId" :badge-style="badgeStyle" />
     <JoinBannerRow :banner="joinBanner" />
     <TypingIndicatorRow :is-visible="isTypingVisible" />
     <ChatInput 
