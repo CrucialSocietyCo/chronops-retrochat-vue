@@ -6,13 +6,15 @@ import JoinBannerRow from './JoinBannerRow.vue'
 import TypingIndicatorRow from './TypingIndicatorRow.vue'
 import { useJoinBanner } from '../composables/useJoinBanner.js'
 import { useTyping } from '../composables/useTyping.js'
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from '../lib/supabase'
+// import { createClient } from '@supabase/supabase-js' // Removed local import
 
 const props = defineProps({
   username: {
     type: String,
     required: true
   },
+  // ... props unchanged ...
   isChatEnabled: {
     type: Boolean,
     default: true
@@ -57,15 +59,12 @@ const startHeartbeat = () => {
 }
 
 // Realtime Setup
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseKey = import.meta.env.VITE_SUPABASE_KEY
-let supabase = null
+// const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+// const supabaseKey = import.meta.env.VITE_SUPABASE_KEY
+// let supabase = null // Using imported singleton
 let channel = null
 
 onMounted(async () => {
-  if (supabaseUrl && supabaseKey) {
-    supabase = createClient(supabaseUrl, supabaseKey)
-    
     // Subscribe to room
     channel = supabase.channel('room:general')
     
@@ -74,9 +73,11 @@ onMounted(async () => {
         handleUserJoined(payload.payload)
       })
       .on('broadcast', { event: 'typing_update' }, (payload) => {
+        console.log('RX Typing Update:', payload)
         handleTypingUpdate(payload.payload)
       })
       .subscribe(async (status) => {
+        console.log('UseTyping Subscription Status:', status)
         if (status === 'SUBSCRIBED') {
            // Emit my join event
            await channel.send({
@@ -90,9 +91,6 @@ onMounted(async () => {
            })
         }
       })
-  } else {
-    console.warn('Supabase URL/Key missing. Join Banner disabled.')
-  }
   
   startHeartbeat()
 })
@@ -119,6 +117,11 @@ const handleMessageSent = (text) => {
 
 <template>
   <div class="chat-interface">
+    <!-- DEBUG BANNER: Remove after fixing -->
+    <!-- <div style="background:red; color:white; padding:2px; font-size:10px;">
+       DEBUG TYPERS: {{ activeTypers.length }} | {{ activeTypers }}
+    </div> -->
+    
     <ChatHistory ref="historyRef" :show-history="showHistory" :client-id="clientId" :badge-style="badgeStyle" />
     <JoinBannerRow :banner="joinBanner" />
     <TypingIndicatorRow :active-typers="activeTypers" :current-user-id="clientId" />

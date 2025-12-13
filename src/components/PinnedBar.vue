@@ -186,8 +186,8 @@ const getIcon = (type) => {
     white-space: nowrap;
 }
 
-.icon { font-size: 16px; }
-.label { font-weight: bold; font-size: 11px; }
+.icon { font-size: 16px; flex-shrink: 0; }
+.label { font-weight: bold; font-size: 11px; flex-shrink: 0; }
 
 .text-scroller {
     flex: 1;
@@ -200,6 +200,7 @@ const getIcon = (type) => {
     align-items: center;
     gap: 8px;
     font-size: 11px;
+    flex-shrink: 0; /* Protect controls from shrinking on mobile */
 }
 
 .expand-btn {

@@ -263,6 +263,14 @@ main {
     align-items: center; /* Fix: Centers contents (chatroom) horizontally on mobile */
 }
 
+@media (max-width: 600px) {
+    .app-container {
+        /* User requested 10% margin top and bottom */
+        height: 80%; 
+        max-height: 80dvh;
+    }
+}
+
 /* Ensure main doesn't double margin if container handles it */
 main {
     margin-bottom: 0;
