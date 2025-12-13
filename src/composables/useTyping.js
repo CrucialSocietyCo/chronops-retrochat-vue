@@ -7,19 +7,14 @@ const DEBOUNCE_MS = 1000
 const BURST_IDLE_THRESHOLD_MS = 10000
 const BURST_END_TIMEOUT_MS = 5000
 
-export function useTyping(authToken, clientId) {
-    const isTypingVisible = ref(false) // Deprecated, but kept for safe transition if needed, though we'll use activeTypers
+export function useTyping(authToken, clientId, username) { // username added
+    const isTypingVisible = ref(false)
     const activeTypers = ref([])
-    // Analytics State
-    const { trackClientEvent } = useAnalytics()
-    let lastTypedTime = 0
-    let stopTypingTimer = null
-    let burstStartedAt = null
-    let burstEndTimer = null
-    let lastKeystrokeTime = 0
-
+    // ...
     const notifyServer = async (status) => {
         try {
+            const currentUsername = typeof username === 'function' ? username() : (username?.value || username)
+
             await fetch(`${API_BASE}/api/chat/typing`, {
                 method: 'POST',
                 headers: {
@@ -27,7 +22,11 @@ export function useTyping(authToken, clientId) {
                     'x-client-id': typeof clientId === 'function' ? clientId() : (clientId?.value || clientId),
                     ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
                 },
-                body: JSON.stringify({ status, eventName: status === 'start' ? 'typing:start' : 'typing:stop' })
+                body: JSON.stringify({
+                    status,
+                    eventName: status === 'start' ? 'typing:start' : 'typing:stop',
+                    username: currentUsername
+                })
             })
         } catch (e) {
             console.error('Failed to notify typing', status, e)
