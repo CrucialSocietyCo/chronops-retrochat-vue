@@ -10,7 +10,15 @@ const BURST_END_TIMEOUT_MS = 5000
 export function useTyping(authToken, clientId, username) { // username added
     const isTypingVisible = ref(false)
     const activeTypers = ref([])
-    // ...
+    const { trackClientEvent } = useAnalytics()
+
+    // Internal State
+    let burstStartedAt = null
+    let lastKeystrokeTime = 0
+    let burstEndTimer = null
+    let stopTypingTimer = null
+    let lastTypedTime = 0
+
     const notifyServer = async (status) => {
         try {
             const currentUsername = typeof username === 'function' ? username() : (username?.value || username)
