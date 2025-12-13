@@ -12,17 +12,18 @@ const props = defineProps({
   }
 })
 
+const others = computed(() => {
+    return props.activeTypers.filter(t => t.id !== props.currentUserId)
+})
+
 const typingText = computed(() => {
-    // Filter out self just in case (though backend handles it usually, better safe)
-    const others = props.activeTypers.filter(t => t.id !== props.currentUserId)
-    
-    if (others.length === 0) return ''
-    if (others.length === 1) return `${others[0].name} is typing<span class="dots">...</span>`
-    if (others.length === 2) return `${others[0].name} and ${others[1].name} are typing<span class="dots">...</span>`
+    if (others.value.length === 0) return ''
+    if (others.value.length === 1) return `${others.value[0].name} is typing<span class="dots">...</span>`
+    if (others.value.length === 2) return `${others.value[0].name} and ${others.value[1].name} are typing<span class="dots">...</span>`
     return `Multiple people are typing<span class="dots">...</span>`
 })
 
-const isVisible = computed(() => props.activeTypers.length > 0)
+const isVisible = computed(() => others.value.length > 0)
 </script>
 
 <template>
