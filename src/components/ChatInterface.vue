@@ -74,6 +74,7 @@ onMounted(async () => {
       })
       .on('broadcast', { event: 'typing_update' }, (payload) => {
         console.log('RX Typing Update:', payload)
+        lastDebugPayload.value = payload
         handleTypingUpdate(payload.payload)
       })
       .subscribe(async (status) => {
@@ -102,6 +103,9 @@ onUnmounted(() => {
   if (heartbeatInterval) clearInterval(heartbeatInterval)
 })
 
+// DEBUG STATE
+const lastDebugPayload = ref(null)
+
 const handleMessageSent = (text) => {
   if (historyRef.value) {
     // If authToken is present, we are admin
@@ -117,10 +121,14 @@ const handleMessageSent = (text) => {
 
 <template>
   <div class="chat-interface">
-    <!-- DEBUG BANNER: Remove after fixing -->
-    <!-- <div style="background:red; color:white; padding:2px; font-size:10px;">
-       DEBUG TYPERS: {{ activeTypers.length }} | {{ activeTypers }}
-    </div> -->
+    <!-- VISUAL DEBUGGING - REMOVE LATER -->
+    <div style="background: #cc0000; color: white; padding: 4px; font-size: 10px; font-family: monospace; border: 2px solid white;">
+        <strong>DEBUG MODE</strong><br>
+        MY ID: {{ clientId }}<br>
+        TYPERS COUNT: {{ activeTypers.length }}<br>
+        RAW TYPERS: {{ JSON.stringify(activeTypers) }}<br>
+        LAST PAYLOAD: {{ JSON.stringify(lastDebugPayload) }}
+    </div>
     
     <ChatHistory ref="historyRef" :show-history="showHistory" :client-id="clientId" :badge-style="badgeStyle" />
     <JoinBannerRow :banner="joinBanner" />
