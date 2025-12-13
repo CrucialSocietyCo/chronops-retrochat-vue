@@ -25,7 +25,6 @@ const getOrCreateClientId = () => {
         localStorage.setItem('chat_client_id', id)
     }
     clientId.value = id
-    console.log('Client ID:', id)
 }
 
 const applyTheme = (theme) => {
@@ -43,7 +42,6 @@ const checkAdminAuth = async () => {
     if (res.ok) {
       const data = await res.json()
       if (data.authenticated) {
-        console.log('Admin authenticated via backend session')
         handleLogin('Admin')
       }
     } else if (res.status === 401) {
@@ -62,7 +60,6 @@ const checkChatStatus = async () => {
   try {
     const res = await fetch(`${API_BASE}/api/chat/context`)
     const data = await res.json()
-    // console.log('Chat context:', data) // Reduce noise
     
     // Update State
     isChatEnabled.value = data.is_chat_enabled
@@ -156,7 +153,6 @@ onMounted(() => {
     const token = params.get('auth_token')
     if (token) {
         authToken.value = token
-        console.log('Captured Auth Token from URL')
         handleLogin('Admin')
     }
   checkAdminAuth()

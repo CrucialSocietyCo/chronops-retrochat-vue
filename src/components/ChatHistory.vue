@@ -63,7 +63,6 @@ const fetchMessages = async () => {
 
     if (res.ok) {
       const newMessages = await res.json()
-      console.log(`[ChatHistory] Polling: sent ${pollTime}, got ${newMessages.length} messages`)
       // Debug logs removed to reduce noise
 
       
@@ -168,7 +167,6 @@ const props = defineProps({
 import { watch } from 'vue' // Ensure watch is imported
 
 watch(() => props.showHistory, (newVal, oldVal) => {
-    console.log(`[ChatHistory] Show History changed: ${oldVal} -> ${newVal}`)
     if (newVal === false) {
         // History hidden: Clear messages
         messages.value = []
@@ -247,7 +245,7 @@ const profileCardRef = ref(null) // To pass element target
 const profileCardComp = ref(null) // Ref for the child component
 
 const handleUsernameClick = (personaId, event, senderName) => {
-    console.log(`[ChatHistory] Username Clicked: ${senderName} (ID: ${personaId})`)
+      // Log click if needed for debugging
     if (!profileCardComp.value) {
         console.error('[ChatHistory] ProfileCard Component Ref is missing!')
         return

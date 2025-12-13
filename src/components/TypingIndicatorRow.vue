@@ -12,10 +12,9 @@ const props = defineProps({
   }
 })
 
-// Revert: Show ALL typers (Debugging/Regression test)
+// Filter out current user so they don't see themselves typing
 const others = computed(() => {
-    // console.log('[TypingRow] Active:', props.activeTypers, 'Current:', props.currentUserId)
-    return props.activeTypers
+    return props.activeTypers.filter(t => t.id !== props.currentUserId)
 })
 
 const typingText = computed(() => {

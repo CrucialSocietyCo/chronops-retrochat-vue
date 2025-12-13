@@ -10,7 +10,6 @@ const cardData = ref(null)
 export function useProfileCard() {
 
     const openCard = async (personaId) => {
-        console.log(`[useProfileCard] Opening card for ${personaId}`)
         if (!personaId) return
 
         // Position Logic REMOVED for Side Dock Layout
@@ -22,11 +21,9 @@ export function useProfileCard() {
         cardData.value = null
 
         try {
-            console.log(`[useProfileCard] Fetching data...`)
             const res = await fetch(`${API_BASE}/api/personas/${personaId}`)
             if (res.ok) {
                 cardData.value = await res.json()
-                console.log(`[useProfileCard] Data received:`, cardData.value)
             } else {
                 console.error('[useProfileCard] Failed to fetch persona card')
                 // Optional: show error state or close

@@ -17,12 +17,6 @@ export function useVoiceDropsApi() {
             throw new Error('Missing Supabase Env Vars')
         }
 
-        // QA Trace Logging
-        console.group('[VoiceDrop] Starting Upload')
-        console.log('📦 Blob Size:', blob.size, 'type:', blob.type)
-        console.log('🔑 Token:', token ? `Present (${token.substring(0, 10)}...)` : 'MISSING!')
-        console.log('🎯 Target Supabase:', supabaseUrl)
-        console.groupEnd()
 
         // Initialize Client (lightweight)
         // If we have a token, we set it as the global auth for this request context

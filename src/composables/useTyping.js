@@ -83,7 +83,6 @@ export function useTyping(authToken, clientId, username) { // username added
     }
 
     const handleTypingUpdate = (payload) => {
-        console.log('[useTyping] Update Payload:', payload)
         // The backend now sends { activeTypers: [{id, name}] }
         // But we might receive legacy triggers or raw arrays
         let typers = []
@@ -95,7 +94,6 @@ export function useTyping(authToken, clientId, username) { // username added
             typers = payload.map(id => ({ id, name: 'Someone' }))
         }
 
-        console.log('[useTyping] Resolved Typers:', typers)
         activeTypers.value = typers
 
         // Computed boolean compatibility

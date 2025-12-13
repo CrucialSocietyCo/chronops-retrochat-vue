@@ -74,7 +74,6 @@ onMounted(async () => {
     subscription = supabase
         .channel('public:pinned_items')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'pinned_items' }, (payload) => {
-            console.log('Pinned Item Update:', payload)
             // Refresh full list to keep order correct
             fetchPinnedItems().then(() => {
                  // Reset index if out of bounds
