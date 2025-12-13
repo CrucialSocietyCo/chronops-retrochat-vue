@@ -772,8 +772,8 @@ const handleInput = () => {
 }
 
 .input-box :deep(img) {
-  max-width: 24px;
-  max-height: 24px;
+  max-width: 21px;
+  max-height: 21px;
   vertical-align: middle;
 }
 

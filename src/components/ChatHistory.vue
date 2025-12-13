@@ -64,16 +64,8 @@ const fetchMessages = async () => {
     if (res.ok) {
       const newMessages = await res.json()
       console.log(`[ChatHistory] Polling: sent ${pollTime}, got ${newMessages.length} messages`)
-      if (newMessages.length > 0) {
-          console.group('[ChatHistory] New Messages Debug')
-          newMessages.forEach(m => {
-              console.log(`ID: ${m.id}, Type: ${m.type}, Subtype: ${m.payload?.subtype}`)
-              if (m.payload?.subtype === 'voice_drop') {
-                  console.log('🎤 VOICE DROP DETECTED in fetch:', m)
-              }
-          })
-          console.groupEnd()
-      }
+      // Debug logs removed to reduce noise
+
       
       if (newMessages.length > 0) {
           // Process Reactions for ALL fetched messages (Initial or New)
@@ -249,6 +241,21 @@ import { supabase } from '../lib/supabase'
 import ReactionPills from './ReactionPills.vue'
 import ReactionPalette from './ReactionPalette.vue'
 import VoiceDropMessage from './VoiceDropMessage.vue'
+import ProfileCard from '@/components/profile/ProfileCard.vue'
+
+const profileCardRef = ref(null) // To pass element target
+const profileCardComp = ref(null) // Ref for the child component
+
+const handleUsernameClick = (personaId, event, senderName) => {
+    console.log(`[ChatHistory] Username Clicked: ${senderName} (ID: ${personaId})`)
+    if (!profileCardComp.value) {
+        console.error('[ChatHistory] ProfileCard Component Ref is missing!')
+        return
+    }
+    profileCardRef.value = event.target
+    profileCardComp.value.openCard(personaId, event.target)
+}
+
 
 const isMobile = ref(false)
 
@@ -362,7 +369,12 @@ onMounted(() => {
       >
         <span class="sender" :class="{ system: msg.type === 'system', admin: msg.isAdmin }">
           <span v-if="msg.isAdmin" class="admin-star">{{ badgeIcon }} </span>
-          {{ msg.sender }}:
+          <span 
+              class="username-click" 
+              @click.stop="handleUsernameClick(msg.persona_id, $event, msg.sender)"
+              v-if="msg.persona_id"
+          >{{ msg.sender }}</span>
+          <span v-else>{{ msg.sender }}</span>:
         </span>
         
         <!-- Voice Drop (Supreme Spec) -->
@@ -425,6 +437,8 @@ onMounted(() => {
             @close="activePalette = null"
         />
     </Transition>
+
+    <ProfileCard ref="profileCardComp" :client-id="clientId" />
   </div>
 </template>
 
@@ -528,7 +542,15 @@ onMounted(() => {
 .sender {
   font-weight: bold;
   color: blue;
+  color: blue;
   margin-right: 4px;
+}
+
+.username-click {
+    cursor: pointer;
+}
+.username-click:hover {
+    text-decoration: underline;
 }
 
 .message-line.system-line {
@@ -568,8 +590,8 @@ onMounted(() => {
 
 
 .content :deep(img) {
-  max-width: 24px;
-  max-height: 24px;
+  max-width: 21px;
+  max-height: 17px;
   vertical-align: middle;
 }
 

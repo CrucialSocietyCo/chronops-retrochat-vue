@@ -143,6 +143,9 @@ const handleLogin = (name) => {
   username.value = name
   isLoggedIn.value = true
   
+  // Persist to localStorage
+  localStorage.setItem('chat_username', name)
+  
   // Track Room Join
   trackEvent('room_joined', { source: 'web_client' })
 }
@@ -158,6 +161,13 @@ onMounted(() => {
     }
   checkAdminAuth()
   checkChatStatus()
+  
+  // Auto-login from localStorage
+  const savedUser = localStorage.getItem('chat_username')
+  if (savedUser && !authToken.value) { // Don't override admin token
+      handleLogin(savedUser)
+  }
+
   pollInterval = setInterval(checkChatStatus, 1000)
 })
 
