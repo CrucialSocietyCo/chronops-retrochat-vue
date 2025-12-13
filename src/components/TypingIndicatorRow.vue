@@ -1,17 +1,35 @@
 <script setup>
-defineProps({
-  isVisible: {
-    type: Boolean,
-    default: false
+import { computed } from 'vue'
+
+const props = defineProps({
+  activeTypers: {
+    type: Array, // Array of { id, name }
+    default: () => []
+  },
+  currentUserId: {
+    type: String,
+    default: ''
   }
 })
+
+const typingText = computed(() => {
+    // Filter out self just in case (though backend handles it usually, better safe)
+    const others = props.activeTypers.filter(t => t.id !== props.currentUserId)
+    
+    if (others.length === 0) return ''
+    if (others.length === 1) return `${others[0].name} is typing<span class="dots">...</span>`
+    if (others.length === 2) return `${others[0].name} and ${others[1].name} are typing<span class="dots">...</span>`
+    return `Multiple people are typing<span class="dots">...</span>`
+})
+
+const isVisible = computed(() => props.activeTypers.length > 0)
 </script>
 
 <template>
   <Transition name="fade-slide">
     <div v-if="isVisible" class="typing-row">
       <span class="icon">✍️</span>
-      <span class="text">Someone is typing<span class="dots">...</span></span>
+      <span class="text" v-html="typingText"></span>
     </div>
   </Transition>
 </template>

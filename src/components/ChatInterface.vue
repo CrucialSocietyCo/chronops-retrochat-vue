@@ -41,7 +41,21 @@ const props = defineProps({
 
 const historyRef = ref(null)
 const { joinBanner, handleUserJoined } = useJoinBanner()
-const { isTypingVisible, startTyping, handleTypingUpdate } = useTyping(props.authToken, props.clientId)
+
+const { activeTypers, startTyping, handleTypingUpdate } = useTyping(props.authToken, props.clientId)
+
+// Heartbeat Setup
+let heartbeatInterval = null
+
+const startHeartbeat = () => {
+    // Initial ping
+    fetch(`${API_BASE}/api/status/heartbeat`, { method: 'POST' }).catch(err => console.error('Heartbeat failed', err))
+    
+    // Ping every 4 minutes (240000ms)
+    heartbeatInterval = setInterval(() => {
+        fetch(`${API_BASE}/api/status/heartbeat`, { method: 'POST' }).catch(err => console.error('Heartbeat failed', err))
+    }, 240000)
+}
 
 // Realtime Setup
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
@@ -61,7 +75,7 @@ onMounted(async () => {
         handleUserJoined(payload.payload)
       })
       .on('broadcast', { event: 'typing_update' }, (payload) => {
-        handleTypingUpdate(payload.payload.activeUserIds)
+        handleTypingUpdate(payload.payload)
       })
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
@@ -80,12 +94,15 @@ onMounted(async () => {
   } else {
     console.warn('Supabase URL/Key missing. Join Banner disabled.')
   }
+  
+  startHeartbeat()
 })
 
 onUnmounted(() => {
   if (channel) {
     supabase.removeChannel(channel)
   }
+  if (heartbeatInterval) clearInterval(heartbeatInterval)
 })
 
 const handleMessageSent = (text) => {
@@ -105,7 +122,7 @@ const handleMessageSent = (text) => {
   <div class="chat-interface">
     <ChatHistory ref="historyRef" :show-history="showHistory" :client-id="clientId" :badge-style="badgeStyle" />
     <JoinBannerRow :banner="joinBanner" />
-    <TypingIndicatorRow :is-visible="isTypingVisible" />
+    <TypingIndicatorRow :active-typers="activeTypers" :current-user-id="clientId" />
     <ChatInput 
       :username="username" 
       :is-chat-enabled="isChatEnabled"
