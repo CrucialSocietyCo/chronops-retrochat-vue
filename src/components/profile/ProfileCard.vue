@@ -273,6 +273,7 @@ button {
     padding: 2px 12px;
     cursor: pointer;
     font-family: 'Sysfont', 'Arial', sans-serif;
+    margin-bottom: 7px;
 }
 button:active {
     border-top: 2px solid #000;
