@@ -24,7 +24,7 @@ export function useTyping(authToken, clientId) {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-client-id': clientId,
+                    'x-client-id': typeof clientId === 'function' ? clientId() : (clientId?.value || clientId),
                     ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
                 },
                 body: JSON.stringify({ status, eventName: status === 'start' ? 'typing:start' : 'typing:stop' })
@@ -41,7 +41,8 @@ export function useTyping(authToken, clientId) {
         if (burstStartedAt === null) {
             if (now - lastKeystrokeTime > BURST_IDLE_THRESHOLD_MS) {
                 burstStartedAt = now
-                trackClientEvent('typing_burst_started', { input_context: 'main_room_input' }, clientId)
+                const cId = typeof clientId === 'function' ? clientId() : (clientId?.value || clientId)
+                trackClientEvent('typing_burst_started', { input_context: 'main_room_input' }, cId)
             }
         }
 
@@ -51,7 +52,8 @@ export function useTyping(authToken, clientId) {
         burstEndTimer = setTimeout(() => {
             if (burstStartedAt !== null) {
                 const duration = Date.now() - burstStartedAt
-                trackClientEvent('typing_burst_ended', { burst_duration_ms: duration }, clientId)
+                const cId = typeof clientId === 'function' ? clientId() : (clientId?.value || clientId)
+                trackClientEvent('typing_burst_ended', { burst_duration_ms: duration }, cId)
                 burstStartedAt = null
             }
         }, BURST_END_TIMEOUT_MS)
@@ -88,7 +90,8 @@ export function useTyping(authToken, clientId) {
         activeTypers.value = typers
 
         // Computed boolean compatibility
-        isTypingVisible.value = typers.some(t => t.id !== clientId)
+        const cId = typeof clientId === 'function' ? clientId() : (clientId?.value || clientId)
+        isTypingVisible.value = typers.some(t => t.id !== cId)
     }
 
     return {

@@ -41,8 +41,7 @@ const props = defineProps({
 
 const historyRef = ref(null)
 const { joinBanner, handleUserJoined } = useJoinBanner()
-
-const { activeTypers, startTyping, handleTypingUpdate } = useTyping(props.authToken, props.clientId)
+const { activeTypers, startTyping, handleTypingUpdate } = useTyping(props.authToken, () => props.clientId)
 
 // Heartbeat Setup
 let heartbeatInterval = null
