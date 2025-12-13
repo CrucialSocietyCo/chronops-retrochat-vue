@@ -184,11 +184,6 @@ watch(() => props.showHistory, (newVal, oldVal) => {
 onMounted(() => {
   fetchMessages()
   pollInterval = setInterval(fetchMessages, 1000)
-  
-  // Sticky Welcome Timer
-  setTimeout(() => {
-      showWelcome.value = false
-  }, 12000)
 })
 
 onUnmounted(() => {
@@ -349,13 +344,11 @@ onMounted(() => {
   <div class="history-wrapper">
     <div ref="historyRef" class="chat-history" @scroll="handleScroll">
       
-      <!-- Sticky Welcome -->
-      <Transition name="fade-slide">
-        <div v-if="showWelcome" class="message-line system-line sticky-welcome">
-             <span class="sender system">OnlineHost:</span>
-             <span class="content system">*** {{ welcomeContent }} ***</span>
-        </div>
-      </Transition>
+    <!-- Sticky Welcome -->
+      <div v-if="showWelcome" class="message-line system-line">
+            <span class="sender system">OnlineHost:</span>
+            <span class="content system">*** {{ welcomeContent }} ***</span>
+      </div>
 
       <div 
         v-for="msg in messages" 
@@ -660,14 +653,6 @@ onMounted(() => {
   transform: scale(0.5) translateY(20px);
 }
 
-.sticky-welcome {
-    position: sticky;
-    top: 0;
-    z-index: 20;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    margin-top: 0;
-}
-
 .fade-slide-enter-active,
 .fade-slide-leave-active {
   transition: all 0.8s ease-in-out;
@@ -685,11 +670,6 @@ onMounted(() => {
   padding-top: 0;
   padding-bottom: 0;
   transform: translateY(-10px);
-}
-
-/* Ensure inner content animates gracefully */
-.sticky-welcome {
-    /* Maintain other styles */
 }
 
 .jump-btn.has-new {
