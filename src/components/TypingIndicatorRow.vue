@@ -12,18 +12,19 @@ const props = defineProps({
   }
 })
 
-const others = computed(() => {
-    return props.activeTypers.filter(t => t.id !== props.currentUserId)
-})
-
+// Revert for Debugging: Show ALL typers including self
 const typingText = computed(() => {
-    if (others.value.length === 0) return ''
-    if (others.value.length === 1) return `${others.value[0].name} is typing<span class="dots">...</span>`
-    if (others.value.length === 2) return `${others.value[0].name} and ${others.value[1].name} are typing<span class="dots">...</span>`
+    const others = props.activeTypers
+    if (others.length === 0) return ''
+    if (others.length === 1) return `${others[0].name} is typing<span class="dots">...</span>`
+    if (others.length === 2) return `${others[0].name} and ${others[1].name} are typing<span class="dots">...</span>`
     return `Multiple people are typing<span class="dots">...</span>`
 })
 
-const isVisible = computed(() => others.value.length > 0)
+const isVisible = computed(() => {
+    // console.log('Typing Debug:', props.activeTypers.length, props.currentUserId)
+    return props.activeTypers.length > 0
+})
 </script>
 
 <template>
