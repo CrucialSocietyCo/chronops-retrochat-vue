@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import ChatHistory from './ChatHistory.vue'
 import ChatInput from './ChatInput.vue'
 import JoinBannerRow from './JoinBannerRow.vue'
@@ -7,6 +7,7 @@ import TypingIndicatorRow from './TypingIndicatorRow.vue'
 import { useJoinBanner } from '../composables/useJoinBanner.js'
 import { useTyping } from '../composables/useTyping.js'
 import { supabase } from '../lib/supabase'
+import { API_BASE } from '../config'
 // import { createClient } from '@supabase/supabase-js' // Removed local import
 
 const props = defineProps({
@@ -23,7 +24,7 @@ const props = defineProps({
     type: Boolean,
     default: true
   },
-  showSponsored: {
+  showAds: {
     type: Boolean,
     default: true
   },
@@ -44,6 +45,14 @@ const props = defineProps({
 const historyRef = ref(null)
 const { joinBanner, handleUserJoined } = useJoinBanner()
 const { activeTypers, startTyping, handleTypingUpdate } = useTyping(props.authToken, () => props.clientId, () => props.username)
+
+watch(
+  () => props.showAds,
+  (value) => {
+    console.debug('[ChatInterface] active event showAds prop', value)
+  },
+  { immediate: true }
+)
 
 // Heartbeat Setup
 let heartbeatInterval = null
@@ -131,12 +140,12 @@ const handleMessageSent = (text) => {
       @message-sent="handleMessageSent" 
       @typing="startTyping"
     />
-    <div v-if="showSponsored" class="text-ad-container">
+    <div v-if="showAds" class="text-ad-container" :data-show-ads="String(showAds)">
       <div class="text-ad">
         <div class="ad-header">SPONSORED LINKS</div>
         <div class="ad-body">
           <span class="arrow">➤</span>
-          <span class="ad-content"><b>Visit</b> Our website <b>HBCUSociety</b>Co<b>.com</b>. <a href="http://hbcusocietyco.com" target="_blank">Click here</a></span>
+          <span class="ad-content"><b>Listen</b> to <b>Trae Morris - We Do</b><b></b>. <a href="https://distrokid.com/hyperfollow/traemorris1/we-do?ref=release&fbclid=IwY2xjawStjYdleHRuA2FlbQIxMABicmlkETFXTGk0WjUyQ21FQVFkRWFic3J0YwZhcHBfaWQQMjIyMDM5MTc4ODIwMDg5MgABHhwhh0lmwvp_g9C306htAzQOnZcWJVIXTqKzq5-wSJ67H580FOZeViZuPovL_aem_UnKQEfNY_cnhTJ6bKyVyZA" target="_blank">Click here</a></span>
         </div>
       </div>
     </div>

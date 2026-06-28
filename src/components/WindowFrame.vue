@@ -35,14 +35,9 @@ defineProps({
 <style scoped>
 .window-frame {
   background: var(--window-bg, #c0c0c0);
-  /* Classic Windows 95 "Pop Out" Border */
-  border-top: 2px solid #ffffff;
-  border-left: 2px solid #ffffff;
-  border-right: 2px solid #000000;
-  border-bottom: 2px solid #000000;
-  box-shadow: 
-    inset 2px 2px 0 0 #dfdfdf,
-    inset -2px -2px 0 0 #808080;
+  border: var(--frame-border, none);
+  border-radius: var(--frame-radius, 0);
+  box-shadow: var(--border-outset);
   padding: 2px;
   display: flex;
   flex-direction: column;
@@ -51,7 +46,7 @@ defineProps({
 }
 
 .title-bar {
-  background: linear-gradient(90deg, #000080, #1084d0);
+  background: var(--title-bg, linear-gradient(90deg, #000080, #1084d0));
   padding: 3px 2px 3px 3px;
   display: flex;
   justify-content: space-between;
@@ -68,7 +63,7 @@ defineProps({
 }
 
 .title-bar-text {
-  color: white;
+  color: var(--title-text, white);
   font-weight: bold;
   font-size: 13px;
   letter-spacing: 0.5px;
@@ -88,9 +83,9 @@ defineProps({
 .title-bar-controls button {
   width: 16px;
   height: 14px;
-  background: #c0c0c0;
-  border: 1px outset #ffffff;
-  box-shadow: inset -1px -1px #404040;
+  background: var(--window-bg, #c0c0c0);
+  border: var(--frame-border, none);
+  box-shadow: var(--border-outset);
   padding: 0;
   font-size: 9px;
   line-height: 1;
@@ -100,7 +95,7 @@ defineProps({
 }
 
 .title-bar-controls button:active {
-  border-style: inset;
+  box-shadow: var(--border-inset);
 }
 
 .window-body {

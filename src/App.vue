@@ -9,11 +9,12 @@ const isLoggedIn = ref(false)
 const username = ref('')
 const isChatEnabled = ref(true)
 const showHistory = ref(true)
-const showSponsored = ref(true)
+const showAds = ref(true)
 const windowTitle = ref('Arts and Entertainment - Red Dragon Inn')
 const eventMode = ref('Live Event')
-const colorTheme = ref('Teal Base')
-const badgeStyle = ref('Star Icon')
+const colorTheme = ref('teal_base')
+const borderStyle = ref('system95')
+const badgeStyle = ref('star_icon')
 const authToken = ref('')
 const clientId = ref('')
 let pollInterval
@@ -27,8 +28,115 @@ const getOrCreateClientId = () => {
     clientId.value = id
 }
 
-const applyTheme = (theme) => {
-    // ...
+const normalizeToken = (value) => String(value ?? '')
+  .trim()
+  .toLowerCase()
+  .replace(/[^a-z0-9]+/g, '_')
+  .replace(/_+/g, '_')
+  .replace(/^_|_$/g, '')
+
+const normalizeColorTheme = (value) => {
+  const map = {
+    teal_base: 'teal_base',
+    tealbase: 'teal_base',
+    graphite: 'graphite',
+    noir_terminal: 'noir_terminal',
+    noirterminal: 'noir_terminal',
+    crt_glow: 'crt_glow',
+    crtglow: 'crt_glow',
+    plum: 'plum',
+    dragon_fire_cult: 'dragon_fire_cult',
+    dragonfirecult: 'dragon_fire_cult'
+  }
+  return map[normalizeToken(value)] || 'teal_base'
+}
+
+const normalizeBorderStyle = (value) => {
+  const map = {
+    system95: 'system95',
+    system_95: 'system95',
+    hard_pixel: 'hard_pixel',
+    hardpixel: 'hard_pixel',
+    slate_shell: 'slate_shell',
+    slateshell: 'slate_shell',
+    vapor_mesh: 'vapor_mesh',
+    vapormesh: 'vapor_mesh'
+  }
+  return map[normalizeToken(value)] || 'system95'
+}
+
+const normalizeAdminBadge = (value) => {
+  const map = {
+    key_icon: 'key_icon',
+    keyicon: 'key_icon',
+    star_icon: 'star_icon',
+    staricon: 'star_icon',
+    system_icon: 'system_icon',
+    systemicon: 'system_icon'
+  }
+  return map[normalizeToken(value)] || 'star_icon'
+}
+
+const classSuffix = (value) => value.replace(/_/g, '-')
+
+const readBooleanSetting = (value, fallback = true) => {
+    if (value === undefined || value === null) return fallback
+    if (typeof value === 'boolean') return value
+    if (typeof value === 'number') return value !== 0
+    if (typeof value === 'string') {
+        const normalized = value.trim().toLowerCase()
+        if (['false', '0', 'off', 'no'].includes(normalized)) return false
+        if (['true', '1', 'on', 'yes'].includes(normalized)) return true
+    }
+    return Boolean(value)
+}
+
+const resolveShowAds = (data) => {
+    if (Object.prototype.hasOwnProperty.call(data, 'show_ads')) {
+        return readBooleanSetting(data.show_ads)
+    }
+    if (Object.prototype.hasOwnProperty.call(data, 'showAds')) {
+        return readBooleanSetting(data.showAds)
+    }
+    return readBooleanSetting(data.show_sponsored ?? data.showSponsored, true)
+}
+
+const applyTheme = ({ color, border, badge } = {}) => {
+    const nextColorTheme = normalizeColorTheme(color ?? colorTheme.value)
+    const nextBorderStyle = normalizeBorderStyle(border ?? borderStyle.value)
+    const nextBadgeStyle = normalizeAdminBadge(badge ?? badgeStyle.value)
+
+    colorTheme.value = nextColorTheme
+    borderStyle.value = nextBorderStyle
+    badgeStyle.value = nextBadgeStyle
+
+    document.documentElement.dataset.colorTheme = nextColorTheme
+    document.documentElement.dataset.borderStyle = nextBorderStyle
+    document.documentElement.dataset.adminBadge = nextBadgeStyle
+
+    document.documentElement.classList.remove(
+      'color-theme-teal-base',
+      'color-theme-graphite',
+      'color-theme-noir-terminal',
+      'color-theme-crt-glow',
+      'color-theme-plum',
+      'color-theme-dragon-fire-cult',
+      'border-style-system95',
+      'border-style-hard-pixel',
+      'border-style-slate-shell',
+      'border-style-vapor-mesh',
+      'theme-dragon-fire-cult'
+    )
+    document.documentElement.classList.add(
+      `color-theme-${classSuffix(nextColorTheme)}`,
+      `border-style-${classSuffix(nextBorderStyle)}`
+    )
+
+    document.body.classList.remove('theme-dragon-fire-cult')
+    if (nextColorTheme === 'dragon_fire_cult') {
+      document.documentElement.classList.add('theme-dragon-fire-cult')
+      document.body.classList.add('theme-dragon-fire-cult')
+    }
 }
 
 import { API_BASE } from './config'
@@ -64,7 +172,14 @@ const checkChatStatus = async () => {
     // Update State
     isChatEnabled.value = data.is_chat_enabled
     showHistory.value = data.show_history
-    showSponsored.value = data.show_sponsored !== false // Default true if undefined
+    showAds.value = resolveShowAds(data)
+
+    console.debug('[chat/context] active event ads setting', {
+      show_ads: data.show_ads,
+      showAds: data.showAds,
+      show_sponsored: data.show_sponsored,
+      resolvedShowAds: showAds.value
+    })
     
     // Construct Window Title
     // data.window_title comes from the events table (via chat/context API)
@@ -81,16 +196,11 @@ const checkChatStatus = async () => {
     
     if (data.chat_mode) eventMode.value = data.chat_mode
     
-    // Theme handling
-      if (data.color_theme !== colorTheme.value) {
-        colorTheme.value = data.color_theme
-        applyTheme(data.color_theme)
-      }
-
-
-    if (data.admin_badge_style) {
-        badgeStyle.value = data.admin_badge_style
-    }
+    applyTheme({
+      color: data.color_theme,
+      border: data.border_style || data.window_border_style,
+      badge: data.admin_badge || data.admin_badge_style
+    })
     
     // Dynamic Favicon
     updateFavicon(isChatEnabled.value)
@@ -149,6 +259,7 @@ const handleLogin = (name) => {
 
 onMounted(() => {
     getOrCreateClientId()
+    applyTheme()
     const params = new URLSearchParams(window.location.search)
     const token = params.get('auth_token')
     if (token) {
@@ -169,6 +280,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   if (pollInterval) clearInterval(pollInterval)
+  document.body.classList.remove('theme-dragon-fire-cult')
 })
 </script>
 
@@ -186,7 +298,7 @@ onUnmounted(() => {
           :username="username" 
           :is-chat-enabled="isChatEnabled"
           :show-history="showHistory" 
-          :show-sponsored="showSponsored"
+          :show-ads="showAds"
           :auth-token="authToken"
           :client-id="clientId"
           :badge-style="badgeStyle"

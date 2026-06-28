@@ -90,24 +90,24 @@ const validateAndLogin = () => {
 }
 
 .login-window {
-  background: #c0c0c0;
-  border: 2px solid #dfdfdf;
-  border-right-color: #404040;
-  border-bottom-color: #404040;
-  box-shadow: 1px 1px 0 0 #000;
+  background: var(--window-bg, #c0c0c0);
+  border: var(--frame-border, none);
+  border-radius: var(--frame-radius, 0);
+  box-shadow: var(--border-outset);
   padding: 2px;
   width: 300px;
   font-family: 'Arial', sans-serif;
+  color: var(--text-color, #000000);
 }
 
 .title-bar {
-  background: linear-gradient(90deg, #000080, #1084d0);
+  background: var(--title-bg, linear-gradient(90deg, #000080, #1084d0));
   padding: 3px 2px;
   margin-bottom: 2px;
 }
 
 .title-bar-text {
-  color: white;
+  color: var(--title-text, white);
   font-weight: bold;
   font-size: 13px;
   margin-left: 2px;
@@ -129,10 +129,10 @@ const validateAndLogin = () => {
   width: 100%;
   padding: 4px;
   margin-bottom: 10px;
-  border: 2px solid #808080;
-  border-right-color: #ffffff;
-  border-bottom-color: #ffffff;
-  box-shadow: inset 1px 1px 0 0 #000;
+  background: var(--input-bg, #ffffff);
+  color: var(--text-color, #000000);
+  border: var(--frame-border, none);
+  box-shadow: var(--border-inset);
   font-family: 'Arial', sans-serif;
   font-size: 14px;
 }
@@ -151,11 +151,10 @@ const validateAndLogin = () => {
 }
 
 .enter-button {
-  background: #c0c0c0;
-  border: 2px solid #dfdfdf;
-  border-right-color: #404040;
-  border-bottom-color: #404040;
-  box-shadow: 1px 1px 0 0 #000;
+  background: var(--window-bg, #c0c0c0);
+  color: var(--text-color, #000000);
+  border: var(--frame-border, none);
+  box-shadow: var(--border-outset);
   padding: 4px 16px;
   font-family: 'Arial', sans-serif;
   font-size: 14px;
@@ -164,9 +163,7 @@ const validateAndLogin = () => {
 }
 
 .enter-button:active {
-  border: 2px solid #404040;
-  border-right-color: #dfdfdf;
-  border-bottom-color: #dfdfdf;
+  box-shadow: var(--border-inset);
   transform: translate(1px, 1px);
 }
 </style>
